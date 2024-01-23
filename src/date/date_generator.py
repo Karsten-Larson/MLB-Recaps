@@ -1,6 +1,8 @@
-from typing import Type, List
-from datetime import datetime
 from .date import Date
+from .date_range import DateRange
+
+from typing import Type
+from datetime import datetime
 from copy import copy
 
 class DateGenerator():
@@ -27,15 +29,20 @@ class DateGenerator():
         return obj
 
     @classmethod
-    def month(cls, month: int, year: int) -> List[Type["Date"]]:
-        firstDate = Date(month, 1, year)
-        dates = []
+    def month(cls, month: int, year: int) -> Type["DateRange"]:
+        start_dt = Date(month, 1, year)
 
-        while firstDate.date.month == month:
-            dates.append(copy(firstDate))
-            firstDate.next()
+        # set the end date to the end of the month
+        end_dt = copy(start_dt)
+        end_dt.next(28)
 
-        return dates
+        # check if it is still in the month then go one back
+        while end_dt.date.month == month:
+            end_dt.next()
+
+        end_dt.prev()
+
+        return DateRange(start_dt, end_dt)
 
 if __name__ == "__main__":
     print("Ran")
