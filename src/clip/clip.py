@@ -1,3 +1,4 @@
+from typing import Type
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -5,23 +6,18 @@ import subprocess
 
 class Clip():
 
-    def __init__(self, row):
-        self.game_pk: str = row.game_pk
-        self.at_bat: int = row.at_bat_number
-        self.inning_topbot: str = row.inning_topbot
+    def __init__(self, play: Type["Play"]):
+        self.play: Type["Play"] = play
         self.clip_url: str = self._generate()
-
-    def getGamePK(self) -> str:
-        return self.game_pk
-
-    def getAtBat(self) -> str:
-        return self.at_bat
 
     def getClipURL(self) -> str:
         return self.clip_url
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.getClipURL()
+
+    def getPlay(self):
+        return self.play
 
     # gets the url of the clip to be downloaded from the savant clip
     def _get_url(self, site_url: str) -> str:
@@ -40,16 +36,12 @@ class Clip():
     # finds the savant clip based on the given at-bat information
     # row must be a pandas dataframe row
     def _generate(self) -> str:
-        # finds the url of the game based on the game_pk information stored in the at-bat data
-        game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self.game_pk}"
-        game = requests.get(game_url)
-
         # load the given game's json file
-        game_json = json.loads(game.text)
+        game_json = self.play.getGame().getGameJSON()
 
         # find the broadcast type so it's always corresponding
         # to the given batter's home team's broadcast
-        if self.inning_topbot == "Top":
+        if self.play.getTopBot() == "Top":
             team = game_json["team_home"]
             broadcast_type = "&videoType=AWAY"
         else:
@@ -57,7 +49,7 @@ class Clip():
             broadcast_type = "&videoType=HOME"
 
         # filter the json file to find the at bat, this will help find the play id
-        team = list(filter(lambda item: item["ab_number"] == self.at_bat, team))
+        team = list(filter(lambda item: item["ab_number"] == self.play.getAtBat(), team))
 
         # sorts the at bat by pitch number, highest number is the last pitch of the at bat
         team.sort(key=lambda item: item["pitch_number"], reverse=True)
