@@ -1,5 +1,6 @@
 # ignore everything from venv folder
 venv
+videos
 __pycache__
 
 # ignore all api keys

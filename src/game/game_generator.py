@@ -14,14 +14,14 @@ class GameGenerator():
         self.date: Union[Type["Date"], Type["DateRange"]] = date
         self._fromDates()
 
-    def fromID(self, id: int) -> Type["Game"]:
-        df = self.df.loc[self.df.game_pk == id]
+    def fromGamePK(self, game_pk: int) -> Type["Game"]:
+        df = self.df.loc[self.df.game_pk == game_pk]
 
         home = df.at[0, "home_team"]
         away = df.at[0, "away_team"]
         date = Date.fromDateString(str(df.at[0, "game_date"]))
 
-        return Game(home, away, id, date, df)     
+        return Game(home, away, game_pk, date, df)     
 
     def _fromDates(self):
         if isinstance(self.date, DateRange):

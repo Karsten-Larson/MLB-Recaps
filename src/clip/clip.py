@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import subprocess
 
 class Clip():
 
@@ -77,3 +78,24 @@ class Clip():
 
         return clip_url
 
+    def download(self, path, verbose=False):
+        # subprocess.run(["ffmpeg", "-i", self.clip_url, "-t", "60", "-c", "copy", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        # create response object 
+        # if a time out happens, try five more times before crashing the entire program
+        for z in range(5):
+            try:
+                r = requests.get(self.clip_url, stream=True, timeout=60) 
+                break
+            except Timeout:
+                print(f'Timeout has been raised. Link: {self.clip_url}')
+
+        # download the file to the specific location
+        # honestly copied and pasted code, can't say much else
+        with open(path, 'wb') as f: 
+            for chunk in r.iter_content(chunk_size = 1024*1024): 
+                if chunk: 
+                    f.write(chunk) 
+
+        if verbose:
+            print(f"Successfully downloaded: {path}")
