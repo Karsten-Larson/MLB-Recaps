@@ -16,6 +16,13 @@ class Game():
         self._home_score = gameData.loc[:, "home_score"].max()
         self._away_score = gameData.loc[:, "away_score"].max()
 
+        # gameData.to_csv("game.csv")
+
+        print(gameData.loc[gameData.inning_topbot != "Top"].batter.unique())
+
+        self._home_lineup = gameData.loc[gameData.inning_topbot == "Top"].batter.unique()
+        self._away_lineup = gameData.loc[gameData.inning_topbot != "Top"].batter.unique()
+
         # finds the url of the game based on the game_pk information stored in the at-bat data
         game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self._game_pk}"
         game = requests.get(game_url)
@@ -34,6 +41,12 @@ class Game():
 
     def getAwayScore(self):
         return self._away_score
+
+    def getHomeLineup(self):
+        return self._home_lineup
+
+    def getAwayLineup(self):
+        return self._away_lineup
 
     def getGamePK(self):
         return self._game_pk
