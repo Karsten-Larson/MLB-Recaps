@@ -2,12 +2,28 @@ from typing import Type, Optional
 from datetime import datetime, timedelta
 
 class Date():
-	
+	def setDateFromString(self, date_string: str):
+		self.date: Type["datetime"] = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+
 	def setDate(self, month: int, day: int, year: int) -> None:
 		self.date: Type["datetime"] = datetime(year, month, day)
 
-	def __init__(self, month: int, day: int, year: int):
-		self.setDate(month, day, year)
+	def __init__(self):
+		self.date: Type["datetime"] = None
+
+	@classmethod
+	def fromDateString(cls, date_string: str):
+		date = cls()
+		date.setDateFromString(date_string)
+
+		return date
+
+	@classmethod
+	def fromDate(cls, month: int, day: int, year: int):
+		date = cls()
+		date.setDate(month, day, year)
+
+		return date
 
 	def next(self, iter: Optional[int]=1) -> None:
 		self.date += timedelta(days=iter)

@@ -1,5 +1,5 @@
 from .date import Date
-from types import Type
+from typing import Type
 
 class DateRange():
 

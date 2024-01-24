@@ -3,10 +3,20 @@ from instabot.bot import Instabot
 from teams.teams import Teams
 from date.date import Date
 from game.game_generator import GameGenerator
+from clip.clip import Clip
 
 if __name__ == "__main__":
-    date = Date(9, 1, 2023)
     teams = Teams(["MIN"])
-    games = GameGenerator.fromDate(teams, date)
+    date = Date.fromDate(9, 1, 2023)
 
-    print(games[0])
+    games = GameGenerator(teams, date)
+    ids = games.getIDs()
+
+    for index, id in enumerate(games.getIDs()):
+        game = games.fromID(id)
+        highlights = game.getGameHighlights(10)
+
+        clips = [Clip(highlight) for index, highlight in highlights.iterrows()]
+
+        print(f"Game {index + 1}: {game}")
+        print(*clips, sep="\n")

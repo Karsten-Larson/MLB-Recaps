@@ -1,0 +1,6 @@
+# ignore everything from venv folder
+venv
+__pycache__
+
+# ignore all api keys
+.env
