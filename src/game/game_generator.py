@@ -3,7 +3,7 @@ from date.date_range import DateRange
 from .game import Game
 
 import pandas as pd
-from pybaseball import statcast
+from pybaseball import statcast, statcast_single_game
 
 from typing import Type, List, Union
 
@@ -31,6 +31,8 @@ class GameGenerator():
 
         # Finds the data for all teams on a given date
         self.df = pd.concat([statcast(start_dt=start_dt.__str__(), end_dt=end_dt.__str__(), team=team, verbose=False) for team in self.teams.getTeams()])
+
+        # self.df.to_csv("game.csv")
 
     def getIDs(self) -> List[int]:
         # Only finds the unique game_pks for a given team (needed in case of a double header)
