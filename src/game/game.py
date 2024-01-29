@@ -1,4 +1,5 @@
 from date.date_generator import DateGenerator
+from .play import Play
 
 from typing import Type
 import requests
@@ -11,6 +12,16 @@ class Game():
         self._game_pk: int = game_pk
         self._date: Type["Date"] = date
         self._game_data = gameData
+
+        self._home_score = gameData.loc[:, "home_score"].max()
+        self._away_score = gameData.loc[:, "away_score"].max()
+
+        # gameData.to_csv("game.csv")
+
+        print(gameData.loc[gameData.inning_topbot != "Top"].batter.unique())
+
+        self._home_lineup = gameData.loc[gameData.inning_topbot == "Top"].batter.unique()
+        self._away_lineup = gameData.loc[gameData.inning_topbot != "Top"].batter.unique()
 
         # finds the url of the game based on the game_pk information stored in the at-bat data
         game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self._game_pk}"
@@ -34,8 +45,14 @@ class Game():
     def getAwayScore(self):
         return self._away_score
 
+    def getHomeLineup(self):
+        return self._home_lineup
+
+    def getAwayLineup(self):
+        return self._away_lineup
+
     def getGamePK(self):
-        return self.game_pk
+        return self._game_pk
 
     def getDate(self):
         return self._date
@@ -68,7 +85,7 @@ class Game():
         df = df.head(plays)
         df = df.sort_values(by="at_bat_number", ascending=True)
 
-        return df
+        return [Play(self, row.at_bat_number) for index, row in df.iterrows()]
 
     def getHomeTeamHighlights(self, plays=10):
         return self.getGameHighlights(plays, "home")

@@ -44,6 +44,8 @@ class GameGenerator():
 
         print(self.ids)
 
+        # self.df.to_csv("game.csv")
+
     def getIDs(self) -> List[int]:
         # Only finds the unique game_pks for a given team (needed in case of a double header)
         return list(self.ids)
