@@ -19,8 +19,8 @@ class Game():
         # load the given game's json file
         self._game_json = json.loads(game.text)
 
-        self._home_score = gameData.loc[:, "home_score"].max()
-        self._away_score = gameData.loc[:, "away_score"].max()
+        self._home_score = gameData.loc[:, "post_home_score"].max()
+        self._away_score = gameData.loc[:, "post_away_score"].max()
     
     def getHome(self):
         return self._home

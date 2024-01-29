@@ -2,20 +2,24 @@ from date.date import Date
 from date.date_range import DateRange
 from .game import Game
 
+import requests
+import json
 import pandas as pd
-from pybaseball import statcast
+from pybaseball import statcast, statcast_single_game
 
-from typing import Type, List, Union
+from typing import Type, List, Union, Set
 
 class GameGenerator():
 
     def __init__(self, teams: Type["Teams"], date: Union[Type["Date"], Type["DateRange"]]):
         self.teams: Type["Teams"] = teams
         self.date: Union[Type["Date"], Type["DateRange"]] = date
+        self.ids: Set[int] = set()
         self._fromDates()
 
+    @classmethod
     def fromGamePK(self, game_pk: int) -> Type["Game"]:
-        df = self.df.loc[self.df.game_pk == game_pk]
+        df = statcast_single_game(game_pk)
 
         home = df.at[0, "home_team"]
         away = df.at[0, "away_team"]
@@ -29,9 +33,17 @@ class GameGenerator():
         else:
             start_dt = end_dt = self.date
 
-        # Finds the data for all teams on a given date
-        self.df = pd.concat([statcast(start_dt=start_dt.__str__(), end_dt=end_dt.__str__(), team=team, verbose=False) for team in self.teams.getTeams()])
+        games_url = [f"https://statsapi.mlb.com/api/v1/schedule?startDate={start_dt.__str__()}&endDate={end_dt.__str__()}&sportId=1&teamId={teamId}" for teamId in self.teams.getTeams()]
+        print(*games_url, sep="\n")
+        date_jsons = [json.loads(requests.get(game_url).text) for game_url in games_url]
+
+        for date_json in date_jsons:
+            for date in date_json["dates"]:
+                for game in date["games"]:
+                    self.ids.add(game["gamePk"])
+
+        print(self.ids)
 
     def getIDs(self) -> List[int]:
         # Only finds the unique game_pks for a given team (needed in case of a double header)
-        return list(self.df.game_pk.unique())
+        return list(self.ids)

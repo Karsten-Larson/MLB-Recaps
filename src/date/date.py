@@ -1,8 +1,10 @@
 from typing import Type, Optional
+from functools import total_ordering
 from datetime import datetime, timedelta
 
+@total_ordering
 class Date():
-	def setDateFromString(self, date_string: str):
+	def setDateFromString(self, date_string: str) -> None:
 		self.date: Type["datetime"] = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
 
 	def setDate(self, month: int, day: int, year: int) -> None:
@@ -10,6 +12,9 @@ class Date():
 
 	def __init__(self):
 		self.date: Type["datetime"] = None
+
+	def getDate(self) -> Type["datetime"]:
+		return self.date
 
 	@classmethod
 	def fromDateString(cls, date_string: str):
@@ -19,7 +24,7 @@ class Date():
 		return date
 
 	@classmethod
-	def fromDate(cls, month: int, day: int, year: int):
+	def fromDate(cls, month: int, day: int, year: int) -> None:
 		date = cls()
 		date.setDate(month, day, year)
 
@@ -37,6 +42,12 @@ class Date():
 		year = self.date.year
 
 		return type(self)(month, day, year)
+
+	def __eq__(self, other):
+		return self.date == other.getDate()
+
+	def __lt__(self, other):
+		return self.date < other.getDate()
 
 	def __str__(self) -> str:
 		return self.date.strftime("%Y-%m-%d")
