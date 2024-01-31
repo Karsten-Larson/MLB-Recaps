@@ -5,27 +5,26 @@ from .game import Game
 import requests
 import json
 import pandas as pd
-from pybaseball import statcast, statcast_single_game
 
 from typing import Type, List, Union, Set
 
 class GameGenerator():
 
-    def __init__(self, teams: Type["Teams"], date: Union[Type["Date"], Type["DateRange"]]):
-        self.teams: Type["Teams"] = teams
+    def __init__(self, teams: Type["Team"], date: Union[Type["Date"], Type["DateRange"]]):
+        if isinstance(teams, list):
+            self.teams: List[Type["Teams"]] = teams
+        else:
+            self.teams: Type["Teams"] = [teams]
+
         self.date: Union[Type["Date"], Type["DateRange"]] = date
         self.ids: Set[int] = set()
         self._fromDates()
 
-    @classmethod
-    def fromGamePK(self, game_pk: int) -> Type["Game"]:
-        df = statcast_single_game(game_pk)
+    def getGames(self) -> List[Type["Game"]]:
+        games = [Game(gameID) for gameID in list(self.ids)]   
+        games.sort(key=lambda x: x.getDate())
 
-        home = df.at[0, "home_team"]
-        away = df.at[0, "away_team"]
-        date = Date.fromDateString(str(df.at[0, "game_date"]))
-
-        return Game(home, away, game_pk, date, df)     
+        return games
 
     def _fromDates(self):
         if isinstance(self.date, DateRange):
@@ -33,18 +32,13 @@ class GameGenerator():
         else:
             start_dt = end_dt = self.date
 
-        games_url = [f"https://statsapi.mlb.com/api/v1/schedule?startDate={start_dt.__str__()}&endDate={end_dt.__str__()}&sportId=1&teamId={teamId}" for teamId in self.teams.getTeams()]
-        print(*games_url, sep="\n")
+        games_url = [f"https://statsapi.mlb.com/api/v1/schedule?startDate={start_dt.__str__()}&endDate={end_dt.__str__()}&sportId=1&teamId={team.getID()}" for team in self.teams]
         date_jsons = [json.loads(requests.get(game_url).text) for game_url in games_url]
 
         for date_json in date_jsons:
             for date in date_json["dates"]:
                 for game in date["games"]:
                     self.ids.add(game["gamePk"])
-
-        print(self.ids)
-
-        # self.df.to_csv("game.csv")
 
     def getIDs(self) -> List[int]:
         # Only finds the unique game_pks for a given team (needed in case of a double header)

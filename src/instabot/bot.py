@@ -2,8 +2,8 @@
 
 class Instabot():
     def setCredentials(self, username: str, password: str) -> None:
-        self.username = username
-        self.password = password
+        self.username: str = username
+        self.password: str = password
 
     def __init__(self, username:str=None, password:str=None):
         self.setCredentials(username, password)
@@ -13,7 +13,7 @@ class Instabot():
 
         # Login in with saved cache (preferable)
         if cacheFilePath != None:
-            print("Logining in using cache")
+            print("Logging in using cache")
             return
 
         if None in [self.username, self.password]:

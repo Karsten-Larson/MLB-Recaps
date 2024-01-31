@@ -6,8 +6,13 @@ import subprocess
 
 class Clip():
 
-    def __init__(self, play: Type["Play"]):
+    def __init__(self, play: Type["Play"], broadcastType: str=None):
         self.play: Type["Play"] = play
+
+        if broadcastType and broadcastType.upper() not in ["HOME", "AWAY"]:
+            raise ValueError("BroadcastType must be None, \"HOME\", or \"AWAY\"")
+
+        self.broadcastType = broadcastType.upper()
         self.clip_url: str = self._generate()
 
     def getClipURL(self) -> str:
@@ -41,22 +46,15 @@ class Clip():
 
         # find the broadcast type so it's always corresponding
         # to the given batter's home team's broadcast
-        if self.play.getTopBot() == "Top":
-            team = game_json["team_home"]
-            broadcast_type = "&videoType=AWAY"
+        if self.broadcastType:
+            broadcastType = self.broadcastType
+        elif self.play.getTopBot() == "TOP":
+            broadcastType = "AWAY"
         else:
-            team = game_json["team_away"]
-            broadcast_type = "&videoType=HOME"
-
-        # filter the json file to find the at bat, this will help find the play id
-        team = list(filter(lambda item: item["ab_number"] == self.play.getAtBat(), team))
-
-        # sorts the at bat by pitch number, highest number is the last pitch of the at bat
-        team.sort(key=lambda item: item["pitch_number"], reverse=True)
-        pitch = team[0]
+            broadcastType = "HOME"
 
         # with the play id find the url for the savant clip
-        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={pitch['play_id']}{broadcast_type}"
+        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={self.play.getPlayID()}&videoType={broadcastType}"
         clip_url = self._get_url(site_url)
 
         # if the clip is alright return it
@@ -65,12 +63,12 @@ class Clip():
         
         # if the clip is screwed up then it was a national tv game
         # return the correct national tv clip url
-        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={pitch['play_id']}&videoType=NETWORK"
+        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={self.play.getPlayID()}&videoType=NETWORK"
         clip_url = self._get_url(site_url)
 
         return clip_url
 
-    def download(self, path, verbose=False):
+    def download(self, path: str, verbose: bool=False) -> None:
         # subprocess.run(["ffmpeg", "-i", self.clip_url, "-t", "60", "-c", "copy", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # create response object 

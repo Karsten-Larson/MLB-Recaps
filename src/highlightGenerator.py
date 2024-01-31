@@ -1,30 +1,24 @@
-from instabot.bot import Instabot
-from teams.teams import Teams
+# from teams.teams import Teams
+from team.team import Team
 from date.date import Date
+from date.date_range import DateRange
 from game.game_generator import GameGenerator
 from clip.clip import Clip
 
 if __name__ == "__main__":
-    teams = Teams(["MIN"])
-    date = Date.fromDate(8, 6, 2023)
+    team = Team("MIN")
+    # dates = DateRange(Date.fromDate(9, 20, 2023), Date.fromDate(9, 22, 2023))
+    # dates = Date.fromDate(5, 5, 2023)
+    dates = Date.fromDate(10, 8, 2023)
 
-    games = GameGenerator(teams, date)
-    ids = games.getIDs()
+    games = GameGenerator(team, dates).getGames()
 
-    for index, id in enumerate(games.getIDs()):
-        game = games.fromGamePK(id)
-
-        home_highlights = game.getHomeTeamHighlights(10)
-        home_clips = [Clip(highlight) for highlight in home_highlights]
-
-        away_highlights = game.getAwayTeamHighlights(10)
-        away_clips = [Clip(highlight) for highlight in away_highlights]
+    for index, game in enumerate(games):
+        homeRoad = "HOME" if game.getHome() == "MIN" else "AWAY"
+        homeHighlights = game.getGameHighlights(10, homeRoad)
+        homeClips = [Clip(highlight, homeRoad) for highlight in homeHighlights]
 
         print(f"Game {index + 1}: {game}")
-        # print(*clips, sep="\n")
 
-        for number, clip in enumerate(home_clips):
-            clip.download(f"./videos/home{number}.mp4", True)
-
-        for number, clip in enumerate(away_clips):
-            clip.download(f"./videos/away{number}.mp4", True)
+        for number, clip in enumerate(homeClips):
+            clip.download(f"./videos/{index}{number:02d}.mp4", True)

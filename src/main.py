@@ -1,25 +1,20 @@
-from instabot.bot import Instabot
-from teams.teams import Teams
+from team.team import Team
 from date.date import Date
 from date.date_range import DateRange
 from game.game_generator import GameGenerator
 from clip.clip import Clip
 
 if __name__ == "__main__":
-    teams = Teams([142])
-    # date = Date.fromDate(8, 6, 2023)
-    dates = DateRange(Date.fromDate(8, 4, 2023), Date.fromDate(8, 6, 2023))
+    teams = Team("MIN")
+    dates = DateRange(Date.fromDate(9, 20, 2023), Date.fromDate(9, 22, 2023))
 
-    games = [GameGenerator.fromGamePK(id) for id in GameGenerator(teams, dates).getIDs()]
-    games.sort(key=lambda x: x.getDate())
+    games = GameGenerator(teams, dates).getGames()
 
     for index, game in enumerate(games):
-        highlights = game.getHomeTeamHighlights(10)
-
-        clips = [Clip(highlight) for index, highlight in highlights.iterrows()]
+        homeHighlights = game.getHomeTeamHighlights(10)
+        homeClips = [Clip(highlight, "home") for highlight in homeHighlights]
 
         print(f"Game {index + 1}: {game}")
-        # print(*clips, sep="\n")
 
-        for number, clip in enumerate(clips):
-            clip.download(f"./videos/{index}{number}.mp4", True)
+        for number, clip in enumerate(homeClips):
+            clip.download(f"./videos/{index}{number:02d}.mp4", True)
