@@ -26,7 +26,7 @@ class GameGenerator():
 
         return games
 
-    def _fromDates(self):
+    def _fromDates(self) -> None:
         if isinstance(self.date, DateRange):
             start_dt, end_dt = self.date.getDates()
         else:

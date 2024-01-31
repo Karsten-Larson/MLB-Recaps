@@ -12,74 +12,74 @@ class Game():
     def __init__(self, game_pk: int):
         url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={game_pk}"
         s = requests.get(url).content
-        self._game_data = pd.read_csv(io.StringIO(s.decode('utf-8')))
+        self.game_data: pd.DataFrame = pd.read_csv(io.StringIO(s.decode('utf-8')))
 
-        self._home: str = self._game_data.at[0, "home_team"]
-        self._away: away = self._game_data.at[0, "away_team"]
-        self._game_pk: int = game_pk
-        self._date: Type["Date"] = Date.fromDateString(str(self._game_data.at[0, "game_date"]))
+        self.home: str = self.game_data.at[0, "home_team"]
+        self.away: str = self.game_data.at[0, "away_team"]
+        self.game_pk: int = game_pk
+        self.date: Type["Date"] = Date.fromDateString(str(self.game_data.at[0, "game_date"]))
 
-        self._home_score = self._game_data.loc[:, "home_score"].max()
-        self._away_score = self._game_data.loc[:, "away_score"].max()
+        # self.home_score: int = self.game_data.loc[:, "home_score"].max()
+        # self.away_score: int = self.game_data.loc[:, "away_score"].max()
 
-        self._home_lineup = self._game_data.loc[self._game_data.inning_topbot == "Top"].batter.unique()
-        self._away_lineup = self._game_data.loc[self._game_data.inning_topbot != "Top"].batter.unique()
+        self.home_lineup = self.game_data.loc[self.game_data.inning_topbot == "Top"].batter.unique()
+        self.away_lineup = self.game_data.loc[self.game_data.inning_topbot != "Top"].batter.unique()
 
-        self._home_score = self._game_data.loc[:, "post_home_score"].max()
-        self._away_score = self._game_data.loc[:, "post_away_score"].max()
+        self.home_score: int = self.game_data.loc[:, "post_home_score"].max()
+        self.away_score: int = self.game_data.loc[:, "post_away_score"].max()
 
         # finds the url of the game based on the game_pk information stored in the at-bat data
-        game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self._game_pk}"
+        game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self.game_pk}"
         game = requests.get(game_url)
     
         # load the given game's json file
-        self._game_json = json.loads(game.text)
-        self._away_json = self._game_json["team_away"]
-        self._home_json = self._game_json["team_home"]
+        self.game_json = json.loads(game.text)
+        self.away_json = self.game_json["team_away"]
+        self.home_json = self.game_json["team_home"]
     
-    def getHome(self):
-        return self._home
+    def getHome(self) -> str:
+        return self.home
 
-    def getAway(self):
-        return self._away
+    def getAway(self) -> str:
+        return self.away
 
-    def getHomeScore(self):
-        return self._home_score
+    def getHomeScore(self) -> int:
+        return self.home_score
 
-    def getAwayScore(self):
-        return self._away_score
+    def getAwayScore(self) -> int:
+        return self.away_score
 
     def getHomeLineup(self):
-        return self._home_lineup
+        return self.home_lineup
 
     def getAwayLineup(self):
-        return self._away_lineup
+        return self.away_lineup
 
-    def getGamePK(self):
-        return self._game_pk
+    def getGamePK(self) -> int:
+        return self.game_pk
 
-    def getDate(self):
-        return self._date
+    def getDate(self) -> Type["Date"]:
+        return self.date
 
-    def getData(self):
-        return self._game_data
+    def getData(self) -> pd.DataFrame:
+        return self.game_data
 
     def getGameJSON(self):
-        return self._game_json.copy()
+        return self.game_json.copy()
 
     def getAwayJSON(self):
-        return self._away_json
+        return self.away_json
 
     def getHomeJSON(self):
-        return self._home_json
+        return self.home_json
 
     def getGameHighlights(self, plays=10, team=None):
-        df = self._game_data.copy()
+        df = self.game_data.copy()
 
         if plays <= 0:
             raise ValueError("Plays must be greater than 0")
 
-        if team.upper() not in [None, "HOME", "AWAY"]:
+        if team is not None and team.upper() not in ["HOME", "AWAY"]:
             raise ValueError("Team must be None, \"HOME\", or \"AWAY\"")
 
         # extra logic for when a home or away team is specified
@@ -105,5 +105,5 @@ class Game():
         return self.getGameHighlights(plays, "away")
 
     def __str__(self) -> str:
-        return f"{self._away} - {self._home}, Final: {self._away_score}-{self._home_score}, Date: {self._date}, GamePK: {self._game_pk}"
+        return f"{self.away} - {self.home}, Final: {self.away_score}-{self.home_score}, Date: {self.date}, GamePK: {self.game_pk}"
 

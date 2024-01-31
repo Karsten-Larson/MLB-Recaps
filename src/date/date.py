@@ -17,14 +17,14 @@ class Date():
 		return self.date
 
 	@classmethod
-	def fromDateString(cls, date_string: str):
-		date = cls()
+	def fromDateString(cls, date_string: str) -> Type["Date"]:
+		date: Type["Date"] = cls()
 		date.setDateFromString(date_string)
 
 		return date
 
 	@classmethod
-	def fromDate(cls, month: int, day: int, year: int) -> None:
+	def fromDate(cls, month: int, day: int, year: int) -> Type["Date"]:
 		date = cls()
 		date.setDate(month, day, year)
 
@@ -36,33 +36,18 @@ class Date():
 	def prev(self, iter: Optional[int]=1) -> None:
 		self.date -= timedelta(days=iter)
 
-	def __copy__(self):
+	def __copy__(self) -> Type["Date"]:
 		month = self.date.month
 		day = self.date.day
 		year = self.date.year
 
 		return type(self)(month, day, year)
 
-	def __eq__(self, other):
+	def __eq__(self, other: Type["Date"]) -> bool:
 		return self.date == other.getDate()
 
-	def __lt__(self, other):
+	def __lt__(self, other: Type["Date"]) -> bool:
 		return self.date < other.getDate()
 
 	def __str__(self) -> str:
 		return self.date.strftime("%Y-%m-%d")
-
-
-if __name__ == "__main__":
-	from copy import copy
-
-	date = Date.yesterday()
-
-	original_date = copy(date)
-	print(f"Yesterday was {date}")
-
-	for i in range(30):
-		date.next()
-		print(date)
-
-	print(f"Original date: {original_date}")

@@ -7,9 +7,7 @@ from clip.clip import Clip
 
 if __name__ == "__main__":
     team = Team("MIN")
-    # dates = DateRange(Date.fromDate(9, 20, 2023), Date.fromDate(9, 22, 2023))
-    # dates = Date.fromDate(5, 5, 2023)
-    dates = Date.fromDate(10, 8, 2023)
+    dates = Date.fromDate(10, 11, 2023)
 
     games = GameGenerator(team, dates).getGames()
 

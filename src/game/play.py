@@ -1,3 +1,4 @@
+import pandas as pd
 from typing import Type
 
 class Play():
@@ -5,10 +6,10 @@ class Play():
     def __init__(self, game: Type["Game"], row):
         self.game: Type["Game"] = game
         self.at_bat: int = row.at_bat_number
-        self.play = row
-        self.pitch_number = row.pitch_number
-        self.batter = row.player_name
-        self.description = row.description
+        self.play: pd.DataFrame = row
+        self.pitch_number: int = row.pitch_number
+        self.batter: str = row.player_name
+        self.description: str = row.description
         self.inning_topbot: str = row.inning_topbot
 
         if self.inning_topbot == "Top":
@@ -21,7 +22,7 @@ class Play():
 
         # sorts the at bat by pitch number, highest number is the last pitch of the at bat
         team.sort(key=lambda item: item["pitch_number"], reverse=True)
-        self.playID = team[0]["play_id"]
+        self.playID: str = team[0]["play_id"]
 
     def getGame(self) -> Type["Game"]:
         return self.game
@@ -29,8 +30,8 @@ class Play():
     def getAtBat(self) -> int:
         return self.at_bat
 
-    def getPlayData(self):
-        return self.play
+    def getPlayData(self) -> pd.DataFrame:
+        return self.play.copy()
 
     def getTopBot(self) -> str:
         return self.inning_topbot

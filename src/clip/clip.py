@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, Optional
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -6,7 +6,7 @@ import subprocess
 
 class Clip():
 
-    def __init__(self, play: Type["Play"], broadcastType: str=None):
+    def __init__(self, play: Type["Play"], broadcastType: Optional[str]=None):
         self.play: Type["Play"] = play
 
         if broadcastType and broadcastType.upper() not in ["HOME", "AWAY"]:
@@ -21,7 +21,7 @@ class Clip():
     def __str__(self) -> str:
         return self.getClipURL()
 
-    def getPlay(self):
+    def getPlay(self) -> Type["Play"]:
         return self.play
 
     # gets the url of the clip to be downloaded from the savant clip
@@ -68,7 +68,7 @@ class Clip():
 
         return clip_url
 
-    def download(self, path: str, verbose: bool=False) -> None:
+    def download(self, path: str, verbose: Optional[bool]=False) -> None:
         # subprocess.run(["ffmpeg", "-i", self.clip_url, "-t", "60", "-c", "copy", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # create response object 
