@@ -5,3 +5,4 @@ __pycache__
 
 # ignore all api keys
 .env
+info.txt

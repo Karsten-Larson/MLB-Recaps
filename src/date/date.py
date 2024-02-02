@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 @total_ordering
 class Date():
 	def setDateFromString(self, date_string: str) -> None:
-		self.date: Type["datetime"] = datetime.strptime(date_string, "%Y-%m-%d")
+		self.date: Type["datetime"] = datetime.strptime(date_string, "%m/%d/%Y")
 
 	def setDate(self, month: int, day: int, year: int) -> None:
 		self.date: Type["datetime"] = datetime(year, month, day)
@@ -15,6 +15,9 @@ class Date():
 
 	def getDate(self) -> Type["datetime"]:
 		return self.date
+
+	def getYear(self) -> int:
+		return self.date.year
 
 	@classmethod
 	def fromDateString(cls, date_string: str) -> Type["Date"]:

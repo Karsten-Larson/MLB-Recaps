@@ -6,36 +6,34 @@ import io
 import requests
 import json
 
-from typing import Type
+from typing import Type, List
 
 class Game():
     def __init__(self, game_pk: int):
-        url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={game_pk}"
-        s = requests.get(url).content
-        self.game_data: pd.DataFrame = pd.read_csv(io.StringIO(s.decode('utf-8')))
-
-        self.home: str = self.game_data.at[0, "home_team"]
-        self.away: str = self.game_data.at[0, "away_team"]
-        self.game_pk: int = game_pk
-        self.date: Type["Date"] = Date.fromDateString(str(self.game_data.at[0, "game_date"]))
-
-        # self.home_score: int = self.game_data.loc[:, "home_score"].max()
-        # self.away_score: int = self.game_data.loc[:, "away_score"].max()
-
-        self.home_lineup = self.game_data.loc[self.game_data.inning_topbot == "Top"].batter.unique()
-        self.away_lineup = self.game_data.loc[self.game_data.inning_topbot != "Top"].batter.unique()
-
-        self.home_score: int = self.game_data.loc[:, "post_home_score"].max()
-        self.away_score: int = self.game_data.loc[:, "post_away_score"].max()
+        self.game_pk: int  = game_pk
+        self.game_data: pd.DataFrame = None
 
         # finds the url of the game based on the game_pk information stored in the at-bat data
         game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self.game_pk}"
         game = requests.get(game_url)
-    
+
         # load the given game's json file
         self.game_json = json.loads(game.text)
         self.away_json = self.game_json["team_away"]
         self.home_json = self.game_json["team_home"]
+
+        # Get home/away and date
+        self.home: str = self.game_json["home_team_data"]["abbreviation"]
+        self.away: str = self.game_json["away_team_data"]["abbreviation"]
+        self.date: Type["Date"] = Date.fromDateString(self.game_json["gameDate"])
+
+        # Get both lineups
+        self.home_lineup: List[int] = self.game_json["home_lineup"]
+        self.away_lineup: List[int] = self.game_json["away_lineup"]
+
+        # Get the final scores
+        self.home_score: int = self.game_json["scoreboard"]["linescore"]["teams"]["home"]["runs"]
+        self.away_score: int = self.game_json["scoreboard"]["linescore"]["teams"]["away"]["runs"]
     
     def getHome(self) -> str:
         return self.home
@@ -49,10 +47,10 @@ class Game():
     def getAwayScore(self) -> int:
         return self.away_score
 
-    def getHomeLineup(self):
+    def getHomeLineup(self) -> List[int]:
         return self.home_lineup
 
-    def getAwayLineup(self):
+    def getAwayLineup(self) -> List[int]:
         return self.away_lineup
 
     def getGamePK(self) -> int:
@@ -62,19 +60,24 @@ class Game():
         return self.date
 
     def getData(self) -> pd.DataFrame:
-        return self.game_data
+        if not self.game_data:
+            url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={self.game_pk}"
+            s = requests.get(url).content
+            self.game_data: pd.DataFrame = pd.read_csv(io.StringIO(s.decode('utf-8')))
+
+        return self.game_data.copy()
 
     def getGameJSON(self):
         return self.game_json.copy()
 
     def getAwayJSON(self):
-        return self.away_json
+        return self.away_json.copy()
 
     def getHomeJSON(self):
-        return self.home_json
+        return self.home_json.copy()
 
     def getGameHighlights(self, plays=10, team=None):
-        df = self.game_data.copy()
+        df = self.getData()
 
         if plays <= 0:
             raise ValueError("Plays must be greater than 0")

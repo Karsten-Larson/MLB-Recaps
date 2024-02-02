@@ -9,7 +9,7 @@ class DateGenerator():
 
     @classmethod
     def today(cls) -> Type["Date"]:
-        obj = Date(1,1,1)
+        obj = Date()
         obj.date = datetime.now()
 
         return obj

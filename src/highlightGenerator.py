@@ -1,4 +1,3 @@
-# from teams.teams import Teams
 from team.team import Team
 from date.date import Date
 from date.date_range import DateRange
