@@ -52,7 +52,7 @@ class Player():
         return len(self.data.index)
 
     def getHomeRuns(self) -> List[Type["Play"]]:
-        return [Play(Game(row.game_pk), row) for index, row in self.data.iterrows()]
+        return [Play(Game(row.game_pk), row) for index, row in self.data.iterrows()][::-1]
 
     def __str__(self) -> str:
         return f"{__class__}@PlayerID={self.playerID}:FirstName={self.firstName}:LastName={self.lastName}"

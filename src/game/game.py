@@ -35,6 +35,12 @@ class Game():
         self.home_score: int = self.game_json["scoreboard"]["linescore"]["teams"]["home"]["runs"]
         self.away_score: int = self.game_json["scoreboard"]["linescore"]["teams"]["away"]["runs"]
     
+    def getHomeRoad(self, team: Type["Team"]) -> str:
+        if self.away == team.getAbbreviation():
+            return "AWAY"
+
+        return "HOME"
+
     def getHome(self) -> str:
         return self.home
 
@@ -52,6 +58,12 @@ class Game():
 
     def getAwayLineup(self) -> List[int]:
         return self.away_lineup
+
+    def getTeamLineup(self, team) -> List[int]:
+        if team.abbr == self.away:
+            return self.getAwayLineup()
+            
+        return self.getHomeLineup()
 
     def getGamePK(self) -> int:
         return self.game_pk
