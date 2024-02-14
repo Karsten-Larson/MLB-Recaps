@@ -5,10 +5,9 @@ from game.game_generator import GameGenerator
 from player.player import Player
 from clip.clip import Clip
 
-if __name__ == "__main__":
-    team = Team("MIN")
-    date = Date.fromDate(9, 4, 2023)
-    # date = Date.fromDate(10, 11, 2023)
+from typing import Type, Union
+
+def last10Homeruns(team: Type["Team"], dates: Union[Type["Date"], Type["DateRange"]]):
     games = GameGenerator(team, date).getGames()
 
     # Get the lineup of both games (in case of double header)
@@ -22,6 +21,12 @@ if __name__ == "__main__":
     for player_id in lineup:
         # Find player from the game
         player = Player(player_id, date.getYear())
+
+        # Check if the player is a batter
+        if not player.isBatter():
+            continue
+
+        # TODO workon edge case if player has two homeruns on the same day
 
         # Check if the player had a multiple of 10 homeruns 
         if player.getNumberOfHomeruns() < 10 or player.getNumberOfHomeruns() % 10 != 0: 
@@ -48,3 +53,11 @@ if __name__ == "__main__":
             clip.download(f"./videos/{player.getLastName()}{index:02d}.mp4", True)
 
     print(f"Successfully Completed")
+
+
+if __name__ == "__main__":
+    team = Team("MIN")
+    date = Date.fromDate(9, 4, 2023)
+    # date = Date.fromDate(10, 11, 2023)
+    
+    last10Homeruns(team, date)

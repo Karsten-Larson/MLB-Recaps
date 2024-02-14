@@ -72,7 +72,7 @@ class Game():
         return self.date
 
     def getData(self) -> pd.DataFrame:
-        if not self.game_data:
+        if isinstance(self.game_data, type(None)):
             url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={self.game_pk}"
             s = requests.get(url).content
             self.game_data: pd.DataFrame = pd.read_csv(io.StringIO(s.decode('utf-8')))
@@ -105,7 +105,7 @@ class Game():
         # then sorts for highest win expectancy for either team
         # then only keeps the top plays
         # also make sure the plays are in chronological order of the game
-        df = df.loc[df.events.notnull()]
+        df = df[df.events.notnull()]
         df = df.sort_values(by="delta_home_win_exp", key=key, ascending=ascending)
         df = df.head(plays)
         df = df.sort_values(by="pitch_number", ascending=True)
@@ -118,6 +118,15 @@ class Game():
 
     def getAwayTeamHighlights(self, plays=10):
         return self.getGameHighlights(plays, "away")
+
+    def getPlayerHighlights(self, player: Type["Player"]):
+        df = self.getData()
+
+        df = df[df.events.notnull() & ((df.batter == player.getPlayerID()) | (df.pitcher == player.getPlayerID()))]
+        df = df.sort_values(by="delta_home_win_exp", key=abs, ascending=False)
+        df = df.sort_values(by="at_bat_number", ascending=True)
+
+        return [Play(self, row) for index, row in df.iterrows()]
 
     def __str__(self) -> str:
         return f"{self.away} - {self.home}, Final: {self.away_score}-{self.home_score}, Date: {self.date}, GamePK: {self.game_pk}"

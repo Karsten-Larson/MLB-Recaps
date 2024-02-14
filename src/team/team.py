@@ -24,8 +24,3 @@ class Team():
 
     def __str__(self) -> str:
         return f"{__class__}@Name={self.team}:Abbreviation={self.abbr}:ID={self.teamID}"
-
-if __name__ == "__main__":
-    team = Team("MIN")
-
-    print(team)
