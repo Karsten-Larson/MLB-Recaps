@@ -1,18 +1,20 @@
-from typing import Type, Optional
-import requests
 from bs4 import BeautifulSoup
+
+import requests
 import json
 import subprocess
 
+from .play import Play
+
 class Clip():
 
-    def __init__(self, play: Type["Play"], broadcastType: Optional[str]=None):
-        self.play: Type["Play"] = play
+    def __init__(self, play: Play, broadcastType: str | None=None):
+        self.play: Play = play
 
         if broadcastType and broadcastType.upper() not in ["HOME", "AWAY"]:
             raise ValueError("BroadcastType must be None, \"HOME\", or \"AWAY\"")
 
-        self.broadcastType = broadcastType.upper()
+        self.broadcastType: str | None = broadcastType if not broadcastType else broadcastType.upper()
         self.clip_url: str = self._generate()
 
     def getClipURL(self) -> str:
@@ -21,18 +23,23 @@ class Clip():
     def __str__(self) -> str:
         return self.getClipURL()
 
-    def getPlay(self) -> Type["Play"]:
+    def getPlay(self) -> Play:
         return self.play
 
     # gets the url of the clip to be downloaded from the savant clip
     def _get_url(self, site_url: str) -> str:
         # Get the savant site
-        site = requests.get(site_url)
+        site: requests.Response = requests.get(site_url)
 
         # Find the video element of the savant clip, find the source url of the clip
-        soup = BeautifulSoup(site.text, features="lxml")
+        soup= BeautifulSoup(site.text, features="lxml")
         video_obj = soup.find("video", id="sporty")
-        clip_url = video_obj.find('source').get('src')
+
+        if not video_obj:
+            return ""
+
+        source = video_obj.find('source')
+        clip_url: str = source.get('src')
 
         # Return the source url of the clip so it can be downloaded later
         return clip_url
@@ -68,7 +75,7 @@ class Clip():
 
         return clip_url
 
-    def download(self, path: str, verbose: Optional[bool]=False) -> None:
+    def download(self, path: str, verbose: bool =False) -> None:
         # subprocess.run(["ffmpeg", "-i", self.clip_url, "-t", "60", "-c", "copy", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # create response object 
@@ -77,7 +84,7 @@ class Clip():
             try:
                 r = requests.get(self.clip_url, stream=True, timeout=60) 
                 break
-            except Timeout:
+            except requests.exceptions.Timeout:
                 print(f'Timeout has been raised. Link: {self.clip_url}')
 
         # download the file to the specific location

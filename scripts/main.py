@@ -1,15 +1,13 @@
-from team.team import Team
-from date.date import Date
-from date.date_range import DateRange
-from game.game_generator import GameGenerator
-from clip.clip import Clip
-from player.player import Player
+from mlbrecaps import Team, Date, GameGenerator, Player
 
 if __name__ == "__main__":
     team = Team("MIN")
-    date = Date.fromDate(6, 23, 2023)
+    date = Date.fromDate(4, 18, 2023)
 
     game = GameGenerator(team, date).getGames()[0]
+    print(game)
+    print(game.getGamePK())
+    exit()
     player = Player(543877, 2023)
 
     plays = game.getPlayerHighlights(player)

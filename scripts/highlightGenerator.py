@@ -1,12 +1,6 @@
-from team.team import Team
-from date.date import Date
-from date.date_range import DateRange
-from game.game_generator import GameGenerator
-from clip.clip import Clip
+from mlbrecaps import Team, Date, DateRange, GameGenerator, Clip
 
-from typing import Type, Union
-
-def highlightGenerator(team: Type["Team"], dates: Union[Type["Date"], Type["DateRange"]]):
+def highlightGenerator(team: Team, dates: Date | DateRange, downloadPath: str="./videos"):
     # get all games on that date
     games = GameGenerator(team, dates).getGames()
 
@@ -23,11 +17,11 @@ def highlightGenerator(team: Type["Team"], dates: Union[Type["Date"], Type["Date
         print(f"Game {index + 1}: {game}")
 
         for number, clip in enumerate(homeClips):
-            clip.download(f"./videos/{index}{number:02d}.mp4", True)
+            clip.download(f"/home/karsten/coding/python/recaps/videos/{index}{number:02d}.mp4", verbose=True)
 
 if __name__ == "__main__":
     # Get teams for the search
     team = Team("MIN")
-    dates = Date.fromDate(6, 1, 2023)
+    dates = Date.fromDate(4, 18, 2023)
 
     highlightGenerator(team, dates)

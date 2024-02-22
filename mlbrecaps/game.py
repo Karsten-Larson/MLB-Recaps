@@ -1,17 +1,19 @@
-from date.date import Date
-from .play import Play
-
 import pandas as pd
 import io
 import requests
 import json
 
-from typing import Type, List
+from typing import List, cast
+
+from .team import Team
+from .date import Date
+from .player import Player
+from .play import Play
 
 class Game():
     def __init__(self, game_pk: int):
         self.game_pk: int  = game_pk
-        self.game_data: pd.DataFrame = None
+        self.game_data: pd.DataFrame | None = None
 
         # finds the url of the game based on the game_pk information stored in the at-bat data
         game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self.game_pk}"
@@ -25,7 +27,7 @@ class Game():
         # Get home/away and date
         self.home: str = self.game_json["home_team_data"]["abbreviation"]
         self.away: str = self.game_json["away_team_data"]["abbreviation"]
-        self.date: Type["Date"] = Date.fromDateString(self.game_json["gameDate"])
+        self.date: Date = Date.fromDateString(self.game_json["gameDate"])
 
         # Get both lineups
         self.home_lineup: List[int] = self.game_json["home_lineup"]
@@ -35,7 +37,7 @@ class Game():
         self.home_score: int = self.game_json["scoreboard"]["linescore"]["teams"]["home"]["runs"]
         self.away_score: int = self.game_json["scoreboard"]["linescore"]["teams"]["away"]["runs"]
     
-    def getHomeRoad(self, team: Type["Team"]) -> str:
+    def getHomeRoad(self, team: Team) -> str:
         if self.away == team.getAbbreviation():
             return "AWAY"
 
@@ -68,16 +70,16 @@ class Game():
     def getGamePK(self) -> int:
         return self.game_pk
 
-    def getDate(self) -> Type["Date"]:
+    def getDate(self) -> Date:
         return self.date
 
     def getData(self) -> pd.DataFrame:
         if isinstance(self.game_data, type(None)):
             url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={self.game_pk}"
             s = requests.get(url).content
-            self.game_data: pd.DataFrame = pd.read_csv(io.StringIO(s.decode('utf-8')))
+            self.game_data = pd.read_csv(io.StringIO(s.decode('utf-8')))
 
-        return self.game_data.copy()
+        return cast(pd.DataFrame, self.game_data).copy()
 
     def getGameJSON(self):
         return self.game_json.copy()
@@ -119,7 +121,7 @@ class Game():
     def getAwayTeamHighlights(self, plays=10):
         return self.getGameHighlights(plays, "away")
 
-    def getPlayerHighlights(self, player: Type["Player"]):
+    def getPlayerHighlights(self, player: Player):
         df = self.getData()
 
         df = df[df.events.notnull() & ((df.batter == player.getPlayerID()) | (df.pitcher == player.getPlayerID()))]

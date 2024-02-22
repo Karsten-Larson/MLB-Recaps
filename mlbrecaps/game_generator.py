@@ -1,26 +1,31 @@
-from date.date import Date
-from date.date_range import DateRange
-from .game import Game
-
 import requests
 import json
 import pandas as pd
 
-from typing import Type, List, Union, Set
+from typing import List, Set
+
+from .team import Team
+from .date import Date
+from .date_range import DateRange
+from .game import Game
 
 class GameGenerator():
 
-    def __init__(self, teams: Type["Team"], date: Union[Type["Date"], Type["DateRange"]]):
+    def __init__(self, teams: Team | List[Team], date: Date | DateRange):
+        # Check if valid a valid team object list or team object is passed
         if isinstance(teams, list):
-            self.teams: List[Type["Teams"]] = teams
-        else:
-            self.teams: Type["Teams"] = [teams]
+            if len(teams) == 0:
+                raise ValueError("A list of Team objects must be passed")
 
-        self.date: Union[Type["Date"], Type["DateRange"]] = date
+            self.teams: List[Team] = teams
+        else:
+            self.teams = [teams]
+
+        self.date: Date | DateRange = date
         self.ids: Set[int] = set()
         self._fromDates()
 
-    def getGames(self) -> List[Type["Game"]]:
+    def getGames(self) -> List[Game]:
         games = [Game(gameID) for gameID in list(self.ids)]   
         games.sort(key=lambda x: x.getDate())
 

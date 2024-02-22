@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import pandas as pd
-from typing import Type
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .game import Game
 
 class Play():
 
-    def __init__(self, game: Type["Game"], row):
-        self.game: Type["Game"] = game
+    def __init__(self, game: Game, row):
+        self.game: Game = game
         self.at_bat: int = row.at_bat_number
         self.play: pd.DataFrame = row
         self.pitch_number: int = row.pitch_number
@@ -24,7 +29,7 @@ class Play():
         team.sort(key=lambda item: item["pitch_number"], reverse=True)
         self.playID: str = team[0]["play_id"]
 
-    def getGame(self) -> Type["Game"]:
+    def getGame(self) -> Game:
         return self.game
 
     def getAtBat(self) -> int:

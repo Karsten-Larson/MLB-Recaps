@@ -1,10 +1,10 @@
-from typing import List
-
 import pandas as pd
 import os
 
+from typing import List
+
 class Team():
-    teamLookup: pd.DataFrame = pd.read_csv(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'team-info.csv'))
+    teamLookup: pd.DataFrame = pd.read_csv(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/team-info.csv'))
 
     def __init__(self, abbr: str):
         self.abbr: str = abbr.upper()
@@ -23,4 +23,4 @@ class Team():
         return self.teamID
 
     def __str__(self) -> str:
-        return f"{__class__}@Name={self.team}:Abbreviation={self.abbr}:ID={self.teamID}"
+        return f"{self.__class__}@Name={self.team}:Abbreviation={self.abbr}:ID={self.teamID}"

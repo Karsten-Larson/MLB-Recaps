@@ -2,6 +2,10 @@
 venv
 videos
 __pycache__
+build
+dist
+*.egg-info
+.mypy_cache
 
 # ignore all api keys
 .env

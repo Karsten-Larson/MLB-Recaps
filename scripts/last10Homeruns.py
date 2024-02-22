@@ -1,28 +1,27 @@
-from team.team import Team
-from date.date import Date
-from date.date_range import DateRange
-from game.game_generator import GameGenerator
-from player.player import Player
-from clip.clip import Clip
+from typing import Set, List
 
-from typing import Type, Union
+from team import Team
+from date import Date, DateRange
+from game import GameGenerator
+from player import Player
+from clip import Clip
 
-def last10Homeruns(team: Type["Team"], dates: Union[Type["Date"], Type["DateRange"]]):
-    games = GameGenerator(team, date).getGames()
+def last10Homeruns(team: Team, dates: Date | DateRange):
+    games: List[Game] = GameGenerator(team, date).getGames()
 
     # Get the lineup of both games (in case of double header)
-    lineup = set()
+    lineup: Set[int] = set()
 
     # Reduce games into one lineup
     for game in games:
         for player_id in game.getTeamLineup(team): # Get lineup of the team only
             lineup.add(player_id)
 
-    lineup = list(lineup)
+    lineup: List[int] = list(lineup)
     
     for player_id in lineup[::-1]:
         # Find player from the game
-        player = Player(player_id, date.getYear())
+        player: Player = Player(player_id, date.getYear())
 
         # Check if the player is a batter
         if not player.isBatter():
@@ -43,10 +42,10 @@ def last10Homeruns(team: Type["Team"], dates: Union[Type["Date"], Type["DateRang
         # Download all the homeruns
         for index, homerun in enumerate(homeruns):
             # Get whether twins were home or away in the given clip
-            homeRoad = homerun.getGame().getHomeRoad(team)
+            homeRoad: str = homerun.getGame().getHomeRoad(team)
 
             # Get the twins broadcast of the clip
-            clip = Clip(homerun, homeRoad)
+            clip: Clip = Clip(homerun, homeRoad)
             print(homerun.getGame().getDate())
 
             # Download the clip
