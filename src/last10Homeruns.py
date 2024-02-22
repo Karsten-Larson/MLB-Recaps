@@ -15,10 +15,12 @@ def last10Homeruns(team: Type["Team"], dates: Union[Type["Date"], Type["DateRang
 
     # Reduce games into one lineup
     for game in games:
-        for player_id in game.getTeamLineup(team): # Get lineup of the twins only
+        for player_id in game.getTeamLineup(team): # Get lineup of the team only
             lineup.add(player_id)
+
+    lineup = list(lineup)
     
-    for player_id in lineup:
+    for player_id in lineup[::-1]:
         # Find player from the game
         player = Player(player_id, date.getYear())
 
@@ -26,15 +28,13 @@ def last10Homeruns(team: Type["Team"], dates: Union[Type["Date"], Type["DateRang
         if not player.isBatter():
             continue
 
-        # TODO workon edge case if player has two homeruns on the same day
-
-        # Check if the player had a multiple of 10 homeruns 
-        if player.getNumberOfHomeruns() < 10 or player.getNumberOfHomeruns() % 10 != 0: 
+        # Check if the player has at least 10 homeruns 
+        if player.getNumberOfHomeruns() < 10 or player.getNumberOfHomeruns() % 10 >= 5: 
             continue
 
         # Find his last 10 homeruns
         print(f"{player.getFullName()} had {player.getNumberOfHomeruns()} homeruns in {date.getYear()}!")
-        homeruns = player.getHomeRuns()[-10:] # only getting the last 10 of every player
+        homeruns = player.getHomeRuns()[-10:] # get last 10 homeruns
 
         # If their last homerun wasn't on that date, continue
         if homeruns[-1].getGame().getDate() != date:
@@ -56,8 +56,8 @@ def last10Homeruns(team: Type["Team"], dates: Union[Type["Date"], Type["DateRang
 
 
 if __name__ == "__main__":
-    team = Team("MIN")
-    date = Date.fromDate(9, 4, 2023)
+    team = Team("ATL")
+    date = Date.fromDate(10, 1, 2023)
     # date = Date.fromDate(10, 11, 2023)
     
     last10Homeruns(team, date)

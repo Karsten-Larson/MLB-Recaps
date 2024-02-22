@@ -70,5 +70,11 @@ class Player():
     def getHomeRuns(self) -> List[Type["Play"]]:
         return [Play(Game(row.game_pk), row) for index, row in self.homerunData.iterrows()][::-1]
 
+    def __eq__(self, other: Type["Player"]) -> bool:
+        return self.playerID == other.playerID
+
+    def __hash__(self) -> int:
+        return self.playerID
+
     def __str__(self) -> str:
         return f"{__class__}@PlayerID={self.playerID}:FirstName={self.firstName}:LastName={self.lastName}"
