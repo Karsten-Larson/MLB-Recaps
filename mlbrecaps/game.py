@@ -3,7 +3,7 @@ import io
 import requests
 import json
 
-from typing import List, cast
+from typing import List, Optional
 
 from .team import Team
 from .date import Date
@@ -79,7 +79,7 @@ class Game():
             s = requests.get(url).content
             self.game_data = pd.read_csv(io.StringIO(s.decode('utf-8')))
 
-        return cast(pd.DataFrame, self.game_data).copy()
+        return self.game_data.copy()
 
     def getGameJSON(self):
         return self.game_json.copy()
@@ -90,7 +90,7 @@ class Game():
     def getHomeJSON(self):
         return self.home_json.copy()
 
-    def getGameHighlights(self, plays=10, team=None):
+    def getHighlights(self, plays:int =10, team: Optional[str]=None):
         df = self.getData()
 
         if plays <= 0:
@@ -116,10 +116,10 @@ class Game():
         return [Play(self, row) for index, row in df.iterrows()]
 
     def getHomeTeamHighlights(self, plays=10):
-        return self.getGameHighlights(plays, "home")
+        return self.getHighlights(plays, "home")
 
     def getAwayTeamHighlights(self, plays=10):
-        return self.getGameHighlights(plays, "away")
+        return self.getHighlights(plays, "away")
 
     def getPlayerHighlights(self, player: Player):
         df = self.getData()

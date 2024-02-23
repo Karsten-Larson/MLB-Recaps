@@ -1,10 +1,6 @@
 from typing import Set, List
 
-from team import Team
-from date import Date, DateRange
-from game import GameGenerator
-from player import Player
-from clip import Clip
+from mlbrecaps import Team, Date, DateRange, GameGenerator, Player, Clip
 
 def last10Homeruns(team: Team, dates: Date | DateRange):
     games: List[Game] = GameGenerator(team, date).getGames()

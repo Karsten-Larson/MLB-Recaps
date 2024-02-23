@@ -10,7 +10,7 @@ def highlightGenerator(team: Team, dates: Date | DateRange, path: str="./videos"
         homeRoad = game.getHomeRoad(team)
 
         # Get the top ten plays of the game
-        homeHighlights = game.getGameHighlights(10, homeRoad) 
+        homeHighlights = game.getHighlights(10, homeRoad) 
         homeClips = Clips(homeHighlights, homeRoad) # Generate clips of the plays from the Twins broadcast
 
         # Download all highlight clips

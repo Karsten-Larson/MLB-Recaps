@@ -8,7 +8,7 @@ if __name__ == "__main__":
     games = GameGenerator(team, date).getGames()
     game = games[0]
 
-    plays = game.getGameHighlights(10, game.getHomeRoad(team))
+    plays = game.getHighlights(10, game.getHomeRoad(team))
     clips = Clips(plays, game.getHomeRoad(team))
 
     clips.download("/home/karsten/coding/python/recaps/videos", verbose=True)

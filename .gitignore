@@ -10,3 +10,4 @@ dist
 # ignore all api keys
 .env
 info.txt
+test.py
