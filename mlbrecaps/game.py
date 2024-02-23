@@ -27,7 +27,7 @@ class Game():
         # Get home/away and date
         self.home: str = self.game_json["home_team_data"]["abbreviation"]
         self.away: str = self.game_json["away_team_data"]["abbreviation"]
-        self.date: Date = Date.fromDateString(self.game_json["gameDate"])
+        self.date: Date = Date(self.game_json["gameDate"])
 
         # Get both lineups
         self.home_lineup: List[int] = self.game_json["home_lineup"]

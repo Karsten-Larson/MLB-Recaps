@@ -1,16 +1,21 @@
 from functools import total_ordering
 from datetime import datetime, timedelta
 
+from typing import Optional
+
 @total_ordering
 class Date():
-	def __init__(self, date: datetime):
-		self.date: datetime = date
+	def __init__(self, date: datetime | str | int, day: Optional[int]=None, year: Optional[int]=None):
+		self.setDate(date, day, year)
 
-	def setDateFromString(self, date_string: str) -> None:
-		self.date = datetime.strptime(date_string, "%m/%d/%Y")
-
-	def setDate(self, month: int, day: int, year: int) -> None:
-		self.date = datetime(year, month, day)
+	def setDate(self, date: datetime | str | int, day: Optional[int]=None, year: Optional[int]=None) -> None:
+		match date:
+			case str():
+				self.date = datetime.strptime(date, "%m/%d/%Y")
+			case int():
+				self.date: datetime = datetime(year, date, day)
+			case _:
+				self.date: datetime = date
 
 	def getDate(self) -> datetime:
 		return self.date
@@ -18,17 +23,17 @@ class Date():
 	def getYear(self) -> int:
 		return self.date.year
 
-	@classmethod
-	def fromDateString(cls, date_string: str) -> 'Date':
-		date: Date = cls(datetime.strptime(date_string, "%m/%d/%Y"))
+	# @classmethod
+	# def fromDateString(cls, date_string: str) -> 'Date':
+	# 	date: Date = cls(datetime.strptime(date_string, "%m/%d/%Y"))
 
-		return date
+	# 	return date
 
-	@classmethod
-	def fromDate(cls, month: int, day: int, year: int) -> 'Date':
-		date = cls(datetime(year, month, day))
+	# @classmethod
+	# def fromDate(cls, month: int, day: int, year: int) -> 'Date':
+	# 	date = cls(datetime(year, month, day))
 
-		return date
+	# 	return date
 
 	def next(self, increment: float=1) -> None:
 		self.date += timedelta(days=increment)

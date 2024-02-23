@@ -1,6 +1,6 @@
-from mlbrecaps import Team, Date, DateRange, GameGenerator, Clip
+from mlbrecaps import Team, Date, DateRange, GameGenerator, Clips
 
-def highlightGenerator(team: Team, dates: Date | DateRange, downloadPath: str="./videos"):
+def highlightGenerator(team: Team, dates: Date | DateRange, path: str="./videos"):
     # get all games on that date
     games = GameGenerator(team, dates).getGames()
 
@@ -11,17 +11,15 @@ def highlightGenerator(team: Team, dates: Date | DateRange, downloadPath: str=".
 
         # Get the top ten plays of the game
         homeHighlights = game.getGameHighlights(10, homeRoad) 
-        homeClips = [Clip(highlight, homeRoad) for highlight in homeHighlights] # Generate clips of the plays from the Twins broadcast
+        homeClips = Clips(homeHighlights, homeRoad) # Generate clips of the plays from the Twins broadcast
 
         # Download all highlight clips
         print(f"Game {index + 1}: {game}")
-
-        for number, clip in enumerate(homeClips):
-            clip.download(f"/home/karsten/coding/python/recaps/videos/{index}{number:02d}.mp4", verbose=True)
+        homeClips.download(f"{path}{index}", True)
 
 if __name__ == "__main__":
     # Get teams for the search
     team = Team("MIN")
-    dates = Date.fromDate(4, 18, 2023)
+    dates = Date(7, 20, 2023)
 
-    highlightGenerator(team, dates)
+    highlightGenerator(team, dates, "/home/karsten/coding/python/recaps/videos/")

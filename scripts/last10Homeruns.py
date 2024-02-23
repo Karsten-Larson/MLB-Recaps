@@ -56,7 +56,7 @@ def last10Homeruns(team: Team, dates: Date | DateRange):
 
 if __name__ == "__main__":
     team = Team("ATL")
-    date = Date.fromDate(10, 1, 2023)
-    # date = Date.fromDate(10, 11, 2023)
+    date = Date(10, 1, 2023)
+    # date = Date(10, 11, 2023)
     
     last10Homeruns(team, date)

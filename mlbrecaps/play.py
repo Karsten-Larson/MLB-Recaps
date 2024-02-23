@@ -14,7 +14,8 @@ class Play():
         self.play: pd.DataFrame = row
         self.pitch_number: int = row.pitch_number
         self.batter: str = row.player_name
-        self.description: str = row.description
+        self.event: str = row.description
+        self.description: str = row.des
         self.inning_topbot: str = row.inning_topbot
 
         if self.inning_topbot == "Top":
@@ -43,6 +44,9 @@ class Play():
 
     def getBatter(self) -> str:
         return self.batter
+
+    def getEvent(self) -> str:
+        return self.event
 
     def getDescription(self) -> str:
         return self.description

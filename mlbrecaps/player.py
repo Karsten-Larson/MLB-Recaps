@@ -4,6 +4,7 @@ import pandas as pd
 import io
 import requests
 import json
+import asyncio
 
 from typing import List, cast, TYPE_CHECKING
 if TYPE_CHECKING:
@@ -72,7 +73,25 @@ class Player():
     def getHomeRuns(self) -> List[Play]:
         from .game import Play, Game
 
-        return [Play(Game(row.game_pk), row) for index, row in self.homerunData.iterrows()][::-1]
+        async def generate():
+            tasks = []
+
+            async def createPlay(row):
+                return Play(Game(row.game_pk), row)
+
+            for index, row in self.homerunData.iterrows():
+                task = asyncio.create_task(createPlay(row))
+                tasks.append(task)
+
+            await asyncio.gather(*tasks)
+
+            results = [task.result() for task in tasks]
+            results.sort(key=lambda play: play.getGame().getDate())
+            return results        
+
+        return asyncio.run(generate())
+
+        # return [Play(Game(row.game_pk), row) for index, row in self.homerunData.iterrows()][::-1]
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, Player):

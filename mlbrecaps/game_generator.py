@@ -1,6 +1,7 @@
 import requests
 import json
 import pandas as pd
+import asyncio
 
 from typing import List, Set
 
@@ -26,11 +27,20 @@ class GameGenerator():
         self._fromDates()
 
     def getGames(self) -> List[Game]:
-        games = [Game(gameID) for gameID in list(self.ids)]   
-        games.sort(key=lambda x: x.getDate())
+        async def createGame(game_pk: int) -> Game:
+                return Game(game_pk)
 
-        return games
+        async def generate() -> List[Game]:
+            tasks = [asyncio.create_task(createGame(game_pk)) for game_pk in self.ids]
 
+            await asyncio.gather(*tasks)
+
+            games: List[Game] = [task.result() for task in tasks]
+            games.sort(key=lambda game: game.getDate())
+            return games        
+
+        return asyncio.run(generate())
+        
     def _fromDates(self) -> None:
         if isinstance(self.date, DateRange):
             start_dt, end_dt = self.date.getDates()
