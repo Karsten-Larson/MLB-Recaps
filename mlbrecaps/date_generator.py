@@ -1,7 +1,8 @@
+from datetime import datetime
+from copy import copy
+
 from .date import Date
 from .date_range import DateRange
-
-from datetime import datetime
 
 class DateGenerator():
 
@@ -26,8 +27,18 @@ class DateGenerator():
         return obj
 
     @classmethod
+    def week(cls, month: int, day: int, year: int) -> DateRange:
+        start_dt = Date(month, day, year)
+
+        # set the end date to the end of the week
+        end_dt = copy(start_dt)
+        end_dt.next(6)
+
+        return DateRange(start_dt, end_dt)
+
+    @classmethod
     def month(cls, month: int, year: int) -> DateRange:
-        start_dt = Date.fromDate(month, 1, year)
+        start_dt = Date(month, 1, year)
 
         # set the end date to the end of the month
         end_dt = copy(start_dt)

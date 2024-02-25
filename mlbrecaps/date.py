@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import total_ordering
 from datetime import datetime, timedelta
 
@@ -34,12 +36,12 @@ class Date():
 	def prev(self, increment: float=1) -> None:
 		self.date -= timedelta(days=increment)
 
-	def __copy__(self) -> 'Date':
+	def __copy__(self) -> Date:
 		month = self.date.month
 		day = self.date.day
 		year = self.date.year
 
-		return callable(self)(datetime(year, month, day))
+		return type(self)(datetime(year, month, day))
 
 	def __eq__(self, o: object) -> bool:
 		if not isinstance(o, Date):
