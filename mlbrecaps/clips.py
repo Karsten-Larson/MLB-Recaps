@@ -1,55 +1,39 @@
-import asyncio
-
-from typing import List, TYPE_CHECKING
+from typing import List, Literal, TYPE_CHECKING
 
 from .play import Play
 from .game import Game
 from .clip import Clip
+from .utils import async_generate, async_run
+import time
 
 class Clips():
-    def __init__(self, plays: List[Play] | Play, broadcastType: str | None=None):
-        if isinstance(plays, list):
-            if len(plays) == 0:
-                raise ValueError("A list of play objects must be passed")
+    def __init__(self, plays: List[Play] | Play, broadcast_type: Literal["HOME", "AWAY"] | None=None):
+        match plays: # Enforce plays types
+            case list():
+                if len(plays) == 0 or not isinstance(plays[0], Play):
+                    raise ValueError("A list of Play objects must be passed")
 
-            self.plays: List[Play] = plays
-        else:
-            self.plays = [plays]
+                self.plays: List[Play] = plays
+            case Play():
+                self.plays = [plays]
+            case _:
+                raise ValueError("A Play or list of Play objects must be passed")
 
-        if broadcastType and broadcastType.upper() not in ["HOME", "AWAY"]:
-            raise ValueError("BroadcastType must be None, \"HOME\", or \"AWAY\"")
+        match broadcast_type: # Enforce broad_type types
+            case "HOME" | "AWAY" | None:
+                self.broadcast_type: str | None = broadcast_type
+            case _:
+                raise ValueError("BroadcastType must be None, \"HOME\", or \"AWAY\"")
 
-        self.broadcastType: str | None = broadcastType if not broadcastType else broadcastType.upper()
+        # Generate clip objects for each play passed
+        self.clips = async_generate(Clip, [(play, self.broadcast_type) for play in self.plays])
 
-        async def generate():
-            async def createClip(play):
-                return Clip(play, self.broadcastType)
-
-            tasks = [asyncio.create_task(createClip(play)) for play in self.plays]
-
-            await asyncio.gather(*tasks)
-
-            clips = [task.result() for task in tasks]
-            return clips        
-
-        self.clips = asyncio.run(generate())
-
-    def getPlays(self) -> List[Play]:
+    def get_plays(self) -> List[Play]:
         return self.plays
 
-    def getClips(self) -> List[Clip]:
+    def get_clips(self) -> List[Clip]:
         return self.clips
 
     def download(self, path: str, verbose: bool=False):
-        async def generate():            
-            async def downloadClip(clip: Clip, path: str, verbose: bool):
-                clip.download(path, verbose=verbose)
-
-            tasks = []
-            for index, clip in enumerate(self.clips):
-                task = asyncio.create_task(downloadClip(clip, f"{path}{index:03d}.mp4", verbose))
-                tasks.append(task)
-
-            await asyncio.gather(*tasks)
-        
-        asyncio.run(generate())
+        args = [(clip, f"{path}{index:03d}.mp4", verbose) for index, clip in enumerate(self.clips)]
+        return async_run(Clip.download, args)

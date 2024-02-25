@@ -4,105 +4,98 @@ import pandas as pd
 import io
 import requests
 import json
-import asyncio
 
-from typing import List, cast, TYPE_CHECKING
+from typing import List, Dict, TYPE_CHECKING
 if TYPE_CHECKING:
     from .game import Play
 
 from .date_generator import DateGenerator
+from .utils import async_generate
 
 class Player():
 
-    def __init__(self, playerID: int, season: int):
-        self.playerID: int = playerID
-        self.season: int = season
+    def __init__(self, player_id: int):
+        self._player_id: int = player_id
 
         # Get player JSON information
-        playerURL: str = f"https://statsapi.mlb.com/api/v1/people/{playerID}"
+        playerURL: str = f"https://statsapi.mlb.com/api/v1/people/{player_id}"
         playerContent = requests.get(playerURL)
-        self.playerJSON = json.loads(playerContent.text)["people"][0]
+        self._player_json = json.loads(playerContent.text)["people"][0]
 
         # Player's name
-        self.firstName: str = self.playerJSON["firstName"]
-        self.lastName: str = self.playerJSON["lastName"]
+        self._first_name: str = self._player_json["firstName"]
+        self._last_name: str = self._player_json["lastName"]
 
         # Player's position
-        self.primaryPosition: str = self.playerJSON["primaryPosition"]["name"]
-        self.primaryPositionAbbr: str = self.playerJSON["primaryPosition"]["abbreviation"]
+        self._primary_position: str = self._player_json["primaryPosition"]["name"]
+        self._primary_position_abbr: str = self._player_json["primaryPosition"]["abbreviation"]
+
+        # Variables for storing data lazy generated
+        self._homerun_data: Dict[pd.DataFrame] = dict()
+
+    def is_pitcher(self) -> bool:
+        return self._primary_position_abbr == "P"
+
+    def is_batter(self) -> bool:
+        return not self.is_pitcher()
+
+    def get_position(self) -> str:
+        return self._primary_position
+
+    def get_position_abbr(self) -> str:
+        return self._primary_position_abbr
+
+    def get_player_id(self) -> int:
+        return self._player_id
+
+    def get_season(self) -> int:
+        return self._season
+
+    def get_first_name(self) -> str:
+        return self._first_name
+
+    def get_last_name(self) -> str:
+        return self._last_name
+
+    def get_full_name(self) -> str:
+        return f"{self._first_name} {self._last_name}"
+
+    def get_data(self) -> pd.DataFrame:
+        return self._homerun_data.copy()
+
+    def __get_homerun_data(self, season: int) -> pd.DataFrame:
+        # If already generated, return it
+        if season in list(self._homerun_data.keys()):
+            return self._homerun_data[season].copy()
 
         # Get CSV information on all their homerun plays
-        homerunURL: str = f"https://baseballsavant.mlb.com/statcast_search/csv?hfPT=&hfAB=home%5C.%5C.run%7C&hfGT=R%7C&hfPR=hit%5C.%5C.into%5C.%5C.play%7C&hfZ=&hfStadium=&hfBBL=&hfNewZones=&hfPull=&hfC=&hfSea={season}%7C&hfSit=&player_type=batter&hfOuts=&hfOpponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt=&game_date_lt=&hfMo=&hfTeam=&home_road=&hfRO=&position=&hfInfield=&hfOutfield=&hfInn=&hfBBT=&batters_lookup%5B%5D={playerID}&hfFlag=&metric_1=&group_by=name&min_pitches=0&min_results=0&min_pas=0&sort_col=pitches&player_event_sort=api_p_release_speed&sort_order=desc&type=details&player_id={playerID}"
+        homerunURL: str = f"https://baseballsavant.mlb.com/statcast_search/csv?hfPT=&hfAB=home%5C.%5C.run%7C&hfGT=R%7C&hfPR=hit%5C.%5C.into%5C.%5C.play%7C&hfZ=&hfStadium=&hfBBL=&hfNewZones=&hfPull=&hfC=&hfSea={season}%7C&hfSit=&player_type=batter&hfOuts=&hfOpponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt=&game_date_lt=&hfMo=&hfTeam=&home_road=&hfRO=&position=&hfInfield=&hfOutfield=&hfInn=&hfBBT=&batters_lookup%5B%5D={self._player_id}&hfFlag=&metric_1=&group_by=name&min_pitches=0&min_results=0&min_pas=0&sort_col=pitches&player_event_sort=api_p_release_speed&sort_order=desc&type=details&player_id={self._player_id}"
         homerunCSV: bytes = requests.get(homerunURL).content
 
-        self.homerunData: pd.DataFrame = pd.read_csv(io.StringIO(homerunCSV.decode('utf-8')))
+        self._homerun_data[season] = pd.read_csv(io.StringIO(homerunCSV.decode('utf-8')))
+        return self._homerun_data[season].copy()
 
-    def isPitcher(self) -> bool:
-        return self.primaryPositionAbbr == "P"
+    def get_homerun_count(self, season: int) -> int:
+        return len(self.__get_homerun_data(season).index)
 
-    def isBatter(self) -> bool:
-        return not self.isPitcher()
-
-    def getPosition(self) -> str:
-        return self.primaryPosition
-
-    def getPositionAbbr(self) -> str:
-        return self.primaryPositionAbbr
-
-    def getPlayerID(self) -> int:
-        return self.playerID
-
-    def getSeason(self) -> int:
-        return self.season
-
-    def getFirstName(self) -> str:
-        return self.firstName
-
-    def getLastName(self) -> str:
-        return self.lastName
-
-    def getFullName(self) -> str:
-        return f"{self.firstName} {self.lastName}"
-
-    def getData(self) -> pd.DataFrame:
-        return self.homerunData.copy()
-
-    def getNumberOfHomeruns(self) -> int:
-        return len(self.homerunData.index)
-
-    def getHomeRuns(self) -> List[Play]:
+    def get_homeruns(self, season: int) -> List[Play]:
         from .game import Play, Game
 
-        async def generate():
-            tasks = []
+        homerun_data = self.__get_homerun_data(season)
+        games: List[Game] = async_generate(Game, homerun_data["game_pk"])
+        rows = [row for index, row in homerun_data.iterrows()]
 
-            async def createPlay(row):
-                return Play(Game(row.game_pk), row)
-
-            for index, row in self.homerunData.iterrows():
-                task = asyncio.create_task(createPlay(row))
-                tasks.append(task)
-
-            await asyncio.gather(*tasks)
-
-            results = [task.result() for task in tasks]
-            results.sort(key=lambda play: play.getGame().getDate())
-            return results        
-
-        return asyncio.run(generate())
-
-        # return [Play(Game(row.game_pk), row) for index, row in self.homerunData.iterrows()][::-1]
+        args = [(game, row) for game, row in zip(games, rows)]
+        return async_generate(Play, args)[::-1]
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, Player):
             return False
 
-        other: Player = cast(Player, o)
-
-        return self.playerID == other.playerID
+        return self._player_id == other._player_id
 
     def __hash__(self) -> int:
-        return self.playerID
+        return self._player_id
 
     def __str__(self) -> str:
-        return f"{self.__class__}@PlayerID={self.playerID}:FirstName={self.firstName}:LastName={self.lastName}"
+        return f"{self.__class__}@PlayerID={self._player_id}:FirstName={self._first_name}:LastName={self._last_name}"

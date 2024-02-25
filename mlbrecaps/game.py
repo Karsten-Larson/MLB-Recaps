@@ -12,86 +12,86 @@ from .play import Play
 
 class Game():
     def __init__(self, game_pk: int):
-        self.game_pk: int  = game_pk
-        self.game_data: pd.DataFrame | None = None
+        self._game_pk: int  = game_pk
+        self._game_data: pd.DataFrame | None = None
 
         # finds the url of the game based on the game_pk information stored in the at-bat data
-        game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self.game_pk}"
+        game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self._game_pk}"
         game = requests.get(game_url)
 
         # load the given game's json file
-        self.game_json = json.loads(game.text)
-        self.away_json = self.game_json["team_away"]
-        self.home_json = self.game_json["team_home"]
+        self._game_json = json.loads(game.text)
+        self._away_json = self._game_json["team_away"]
+        self._home_json = self._game_json["team_home"]
 
         # Get home/away and date
-        self.home: str = self.game_json["home_team_data"]["abbreviation"]
-        self.away: str = self.game_json["away_team_data"]["abbreviation"]
-        self.date: Date = Date(self.game_json["gameDate"])
+        self._home: Team = Team(self._game_json["home_team_data"]["abbreviation"])
+        self._away: Team = Team(self._game_json["away_team_data"]["abbreviation"])
+        self._date: Date = Date(self._game_json["gameDate"])
 
         # Get both lineups
-        self.home_lineup: List[int] = self.game_json["home_lineup"]
-        self.away_lineup: List[int] = self.game_json["away_lineup"]
+        self._home_lineup: List[int] = self._game_json["home_lineup"]
+        self._away_lineup: List[int] = self._game_json["away_lineup"]
 
         # Get the final scores
-        self.home_score: int = self.game_json["scoreboard"]["linescore"]["teams"]["home"]["runs"]
-        self.away_score: int = self.game_json["scoreboard"]["linescore"]["teams"]["away"]["runs"]
+        self._home_score: int = self._game_json["scoreboard"]["linescore"]["teams"]["home"]["runs"]
+        self._away_score: int = self._game_json["scoreboard"]["linescore"]["teams"]["away"]["runs"]
     
-    def getHomeRoad(self, team: Team) -> str:
-        if self.away == team.getAbbreviation():
+    def road_status(self, team: Team) -> str:
+        if self._away == team:
             return "AWAY"
 
         return "HOME"
 
-    def getHome(self) -> str:
-        return self.home
+    def get_home(self) -> Team:
+        return self._home
 
-    def getAway(self) -> str:
-        return self.away
+    def get_away(self) -> Team:
+        return self._away
 
-    def getHomeScore(self) -> int:
-        return self.home_score
+    def get_home_score(self) -> int:
+        return self._home_score
 
-    def getAwayScore(self) -> int:
-        return self.away_score
+    def get_away_score(self) -> int:
+        return self._away_score
 
-    def getHomeLineup(self) -> List[int]:
-        return self.home_lineup
+    def get_home_lineup(self) -> List[int]:
+        return self._home_lineup
 
-    def getAwayLineup(self) -> List[int]:
-        return self.away_lineup
+    def get_away_lineup(self) -> List[int]:
+        return self._away_lineup
 
-    def getTeamLineup(self, team) -> List[int]:
-        if team.abbr == self.away:
-            return self.getAwayLineup()
+    def get_lineup(self, team) -> List[int]:
+        if team == self._away:
+            return self.get_away_lineup()
             
-        return self.getHomeLineup()
+        return self.get_home_lineup()
 
-    def getGamePK(self) -> int:
-        return self.game_pk
+    def get_game_pk(self) -> int:
+        return self._game_pk
 
-    def getDate(self) -> Date:
-        return self.date
+    def get_date(self) -> Date:
+        return self._date
 
-    def getData(self) -> pd.DataFrame:
-        if isinstance(self.game_data, type(None)):
-            url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={self.game_pk}"
+    def get_data(self) -> pd.DataFrame:
+        if not self._game_data:
+            url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={self._game_pk}"
             s = requests.get(url).content
-            self.game_data = pd.read_csv(io.StringIO(s.decode('utf-8')))
+            self._game_data = pd.read_csv(io.StringIO(s.decode('utf-8')))
 
-        return self.game_data.copy()
+        return self._game_data.copy()
 
-    def getGameJSON(self):
-        return self.game_json.copy()
+    def get_game_json(self):
+        return self._game_json.copy()
 
-    def getAwayJSON(self):
-        return self.away_json.copy()
+    def get_away_json(self):
+        return self._away_json.copy()
 
-    def getHomeJSON(self):
-        return self.home_json.copy()
+    def get_home_json(self):
+        return self._home_json.copy()
 
-    def getHighlights(self, plays:int =10, team: Optional[str]=None):
-        df = self.getData()
+    def get_highlights(self, plays:int =10, team: Optional[str]=None):
+        df = self.get_data()
 
         if plays <= 0:
             raise ValueError("Plays must be greater than 0")
@@ -115,21 +115,23 @@ class Game():
 
         return [Play(self, row) for index, row in df.iterrows()]
 
-    def getHomeTeamHighlights(self, plays=10):
-        return self.getHighlights(plays, "home")
+    def get_home_highlights(self, plays=10):
+        return self.get_highlights(plays, "home")
 
-    def getAwayTeamHighlights(self, plays=10):
-        return self.getHighlights(plays, "away")
+    def get_away_highlights(self, plays=10):
+        return self.get_highlights(plays, "away")
 
-    def getPlayerHighlights(self, player: Player):
-        df = self.getData()
+    def get_player_highlights(self, player: Player):
+        df = self.get_data()
 
-        df = df[df.events.notnull() & ((df.batter == player.getPlayerID()) | (df.pitcher == player.getPlayerID()))]
+        # TODO: Could show highlights of pitcher getting shelled at the moment (sort key: abs)
+        df = df[df.events.notnull() & ((df.batter == player.get_player_id()) | (df.pitcher == player.get_player_id()))]
         df = df.sort_values(by="delta_home_win_exp", key=abs, ascending=False)
         df = df.sort_values(by="at_bat_number", ascending=True)
 
-        return [Play(self, row) for index, row in df.iterrows()]
+        return async_generate(Play, [(self, row) for index, row in df.iterrows()])
+        # return [Play(self, row) for index, row in df.iterrows()]
 
     def __str__(self) -> str:
-        return f"{self.away} - {self.home}, Final: {self.away_score}-{self.home_score}, Date: {self.date}, GamePK: {self.game_pk}"
+        return f"{self._away.get_abbr()} - {self._home.get_abbr()}, Final: {self._away_score}-{self._home_score}, Date: {self._date}, GamePK: {self._game_pk}"
 

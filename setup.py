@@ -10,7 +10,7 @@ setup(
     packages=find_packages(include=["mlbrecaps"]),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com",
+    url="https://github.com/MrRedwing/MLB-Recaps",
     author="Karsten Larson",
     author_email="karsten.larson.1@gmail.com",
     license="MIT",

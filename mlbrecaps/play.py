@@ -19,9 +19,9 @@ class Play():
         self.inning_topbot: str = row.inning_topbot
 
         if self.inning_topbot == "Top":
-            team = self.game.getHomeJSON()
+            team = self.game.get_home_json()
         else:
-            team = self.game.getAwayJSON()
+            team = self.game.get_away_json()
 
         # filter the json file to find the at bat, this will help find the play id
         team = [x for x in team if x["ab_number"] == self.at_bat]

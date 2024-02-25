@@ -2,7 +2,6 @@ from .date import Date
 from .date_range import DateRange
 
 from datetime import datetime
-from copy import copy
 
 class DateGenerator():
 
@@ -41,6 +40,3 @@ class DateGenerator():
         end_dt.prev()
 
         return DateRange(start_dt, end_dt)
-
-if __name__ == "__main__":
-    print("Ran")

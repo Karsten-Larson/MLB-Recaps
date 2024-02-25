@@ -8,26 +8,31 @@ from .play import Play
 
 class Clip():
 
-    def __init__(self, play: Play, broadcastType: str | None=None):
+    def __init__(self, play: Play, broadcast_type: str | None=None):
+        if not isinstance(play, Play):
+            raise ValueError("Play must be a Play object")
+
         self.play: Play = play
 
-        if broadcastType and broadcastType.upper() not in ["HOME", "AWAY"]:
-            raise ValueError("BroadcastType must be None, \"HOME\", or \"AWAY\"")
+        match broadcast_type: # Enforce broad_type types
+            case "HOME" | "AWAY" | None:
+                self.broadcast_type: str | None = broadcast_type
+            case _:
+                raise ValueError("BroadcastType must be None, \"HOME\", or \"AWAY\"")
 
-        self.broadcastType: str | None = broadcastType if not broadcastType else broadcastType.upper()
-        self.clip_url: str = self._generate()
+        self.clip_url: str = self.__generate()
 
-    def getClipURL(self) -> str:
+    def get_clip_url(self) -> str:
         return self.clip_url
 
     def __str__(self) -> str:
-        return self.getClipURL()
+        return self.get_clip_url()
 
-    def getPlay(self) -> Play:
+    def get_play(self) -> Play:
         return self.play
 
     # gets the url of the clip to be downloaded from the savant clip
-    def _get_url(self, site_url: str) -> str:
+    def __get_url(self, site_url: str) -> str:
         # Get the savant site
         site: requests.Response = requests.get(site_url)
 
@@ -47,22 +52,22 @@ class Clip():
 
     # finds the savant clip based on the given at-bat information
     # row must be a pandas dataframe row
-    def _generate(self) -> str:
+    def __generate(self) -> str:
         # load the given game's json file
-        game_json = self.play.getGame().getGameJSON()
+        game_json = self.play.getGame().get_game_json()
 
         # find the broadcast type so it's always corresponding
         # to the given batter's home team's broadcast
-        if self.broadcastType:
-            broadcastType = self.broadcastType
+        if self.broadcast_type:
+            broadcast_type = self.broadcast_type
         elif self.play.getTopBot() == "TOP":
-            broadcastType = "AWAY"
+            broadcast_type = "AWAY"
         else:
-            broadcastType = "HOME"
+            broadcast_type = "HOME"
 
         # with the play id find the url for the savant clip
-        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={self.play.getPlayID()}&videoType={broadcastType}"
-        clip_url = self._get_url(site_url)
+        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={self.play.getPlayID()}&videoType={broadcast_type}"
+        clip_url = self.__get_url(site_url)
 
         # if the clip is alright return it
         if clip_url != "":
@@ -71,7 +76,7 @@ class Clip():
         # if the clip is screwed up then it was a national tv game
         # return the correct national tv clip url
         site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={self.play.getPlayID()}&videoType=NETWORK"
-        clip_url = self._get_url(site_url)
+        clip_url = self.__get_url(site_url)
 
         return clip_url
 

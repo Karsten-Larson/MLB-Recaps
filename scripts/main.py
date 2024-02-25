@@ -2,25 +2,16 @@ from mlbrecaps import Team, Date, GameGenerator, Player
 
 if __name__ == "__main__":
     team = Team("MIN")
-    date = Date.fromDate(4, 18, 2023)
+    date = Date(4, 18, 2023)
 
-    game = GameGenerator(team, date).getGames()[0]
+    game = GameGenerator(team, date).get_games()[0]
     print(game)
-    print(game.getGamePK())
+    print(game.get_game_pk())
     exit()
-    player = Player(543877, 2023)
+    player = Player(543877)
 
-    plays = game.getPlayerHighlights(player)
+    plays = game.get_player_highlights(player)
 
     for play in plays:
         print(play)
 
-
-    # for index, game in enumerate(games):
-    #     homeHighlights = game.getHomeTeamHighlights(10)
-    #     homeClips = [Clip(highlight, "home") for highlight in homeHighlights]
-
-    #     print(f"Game {index + 1}: {game}")
-
-    #     for number, clip in enumerate(homeClips):
-    #         clip.download(f"./videos/{index}{number:02d}.mp4", True)
