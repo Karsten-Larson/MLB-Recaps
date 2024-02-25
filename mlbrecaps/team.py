@@ -8,20 +8,20 @@ class Team():
     _teams: Dict = dict()
 
     def __new__(cls, abbr: str):
-        if abbr in list(cls._teams.keys()):
-            return cls._teams[abbr]
+        if abbr.upper() in list(cls._teams.keys()):
+            return cls._teams[abbr.upper()]
 
         return super().__new__(cls)
 
     def __init__(self, abbr: str):
         self._abbr: str = abbr.upper()
 
-        row: pd.DataFrame = Team._team_lookup.loc[Team._team_lookup["Abbreviation"] == abbr]
+        row: pd.DataFrame = Team._team_lookup.loc[Team._team_lookup["Abbreviation"] == self._abbr]
         self._team: str = row["Full Name"].values[0]
         self._teamID: int = row["Team ID"].values[0]
 
-        # Speeds up Team creation for Teams of the same name
-        Team._teams[abbr] = self
+        # Speeds up Team instantiation if Team already exists
+        Team._teams[self._abbr] = self
 
     def get_name(self) -> str:
         return self._team
