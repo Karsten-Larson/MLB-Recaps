@@ -8,7 +8,7 @@ from .team import Team
 from .date import Date
 from .date_range import DateRange
 from .game import Game
-from .utils import async_generate
+from .utils import async_run
 
 class GameGenerator():
 
@@ -49,7 +49,7 @@ class GameGenerator():
             return self._games.copy()
 
         # Generate every Game object from ids
-        self._games = async_generate(Game, self._ids)
+        self._games = async_run(Game, list(self._ids))
         return self._games.copy()
         
     def __from_dates(self) -> None:

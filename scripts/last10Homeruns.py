@@ -12,10 +12,8 @@ def last10Homeruns(team: Team, dates: Date | DateRange):
     for game in games:
         for player_id in game.get_lineup(team): # Get lineup of the team only
             lineup.add(player_id)
-
-    lineup: List[int] = list(lineup)
     
-    for player_id in lineup[::-1]:
+    for player_id in lineup:
         # Find player from the game
         player: Player = Player(player_id, date.get_year())
 
@@ -24,7 +22,7 @@ def last10Homeruns(team: Team, dates: Date | DateRange):
             continue
 
         # Check if the player has at least 10 homeruns 
-        if player.get_homerun_count() < 10 or player.get_homerun_count() % 10 >= 5: 
+        if player.get_homerun_count() < 10: 
             continue
 
         # Find his last 10 homeruns

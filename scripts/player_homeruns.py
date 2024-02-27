@@ -5,6 +5,8 @@ from mlbrecaps import Player, Play, Clips
 def player_homeruns(player_id: int, download_path: str, season: int=2023):
     player: Player = Player(player_id)
 
+    print(f"{player.get_full_name()} had {player.get_homerun_count(season)} homeruns in {season}")
+
     homeruns: List[Play] = player.get_homeruns(season)
 
     clips: Clips = Clips(homeruns)

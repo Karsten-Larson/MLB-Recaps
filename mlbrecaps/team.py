@@ -1,16 +1,15 @@
 import pandas as pd
 import os
 
+from functools import cache
 from typing import List, Dict
 
 class Team():
     _team_lookup: pd.DataFrame = pd.read_csv(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/team-info.csv'))
-    _teams: Dict = dict()
 
+    # Speeds up and saves memory by caching the same type of objects
+    @cache
     def __new__(cls, abbr: str):
-        if abbr.upper() in list(cls._teams.keys()):
-            return cls._teams[abbr.upper()]
-
         return super().__new__(cls)
 
     def __init__(self, abbr: str):
@@ -19,9 +18,6 @@ class Team():
         row: pd.DataFrame = Team._team_lookup.loc[Team._team_lookup["Abbreviation"] == self._abbr]
         self._team: str = row["Full Name"].values[0]
         self._teamID: int = row["Team ID"].values[0]
-
-        # Speeds up Team instantiation if Team already exists
-        Team._teams[self._abbr] = self
 
     def get_name(self) -> str:
         return self._team

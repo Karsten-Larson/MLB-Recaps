@@ -3,14 +3,21 @@ import io
 import requests
 import json
 
+from functools import lru_cache
 from typing import List, Optional
 
 from .team import Team
 from .date import Date
 from .player import Player
 from .play import Play
+from .utils import async_run, dataframe_from_url
 
 class Game():
+
+    @lru_cache(maxsize=3)
+    def __new__(cls, game_pk: int):
+        return super().__new__(cls)
+
     def __init__(self, game_pk: int):
         self._game_pk: int  = game_pk
         self._game_data: pd.DataFrame | None = None
@@ -73,13 +80,12 @@ class Game():
     def get_date(self) -> Date:
         return self._date
 
-    def get_data(self) -> pd.DataFrame:
-        if not self._game_data:
-            url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={self._game_pk}"
-            s = requests.get(url).content
-            self._game_data = pd.read_csv(io.StringIO(s.decode('utf-8')))
+    @dataframe_from_url
+    def __get_data(self) -> pd.DataFrame:
+        return f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={self._game_pk}"
 
-        return self._game_data.copy()
+    def get_data(self) -> pd.DataFrame:
+        return self.__get_data().copy()
 
     def get_game_json(self):
         return self._game_json.copy()
@@ -91,7 +97,7 @@ class Game():
         return self._home_json.copy()
 
     def get_highlights(self, plays:int =10, team: Optional[str]=None):
-        df = self.get_data()
+        df = self.__get_data()
 
         if plays <= 0:
             raise ValueError("Plays must be greater than 0")
@@ -113,7 +119,8 @@ class Game():
         df = df.sort_values(by="pitch_number", ascending=True)
         df = df.sort_values(by="at_bat_number", ascending=True)
 
-        return [Play(self, row) for index, row in df.iterrows()]
+        rows = [row for index, row in df.iterrows()]
+        return async_run(Play, self, rows)
 
     def get_home_highlights(self, plays=10):
         return self.get_highlights(plays, "home")
@@ -121,16 +128,24 @@ class Game():
     def get_away_highlights(self, plays=10):
         return self.get_highlights(plays, "away")
 
-    def get_player_highlights(self, player: Player):
-        df = self.get_data()
+    def get_player_highlights(self, player: Player, plays: int):
+        df = self.__get_data()
 
-        # TODO: Could show highlights of pitcher getting shelled at the moment (sort key: abs)
+        home_player = player.get_player_id() in self.get_home_lineup()
+
         df = df[df.events.notnull() & ((df.batter == player.get_player_id()) | (df.pitcher == player.get_player_id()))]
-        df = df.sort_values(by="delta_home_win_exp", key=abs, ascending=False)
+        df = df.sort_values(by="delta_home_win_exp", key=None, ascending=home_player)
         df = df.sort_values(by="at_bat_number", ascending=True)
 
-        return async_generate(Play, [(self, row) for index, row in df.iterrows()])
-        # return [Play(self, row) for index, row in df.iterrows()]
+        if home_player:
+            df = df[df["delta_home_win_exp"] >= 0]
+        else:
+            df = df[df["delta_home_win_exp"] <= 0]
+
+        df = df.head(plays)
+
+        rows = [row for index, row in df.iterrows()]
+        return async_run(Play, self, rows)
 
     def __str__(self) -> str:
         return f"{self._away.get_abbr()} - {self._home.get_abbr()}, Final: {self._away_score}-{self._home_score}, Date: {self._date}, GamePK: {self._game_pk}"

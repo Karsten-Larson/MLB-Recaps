@@ -3,7 +3,7 @@ from typing import List, Literal, TYPE_CHECKING
 from .play import Play
 from .game import Game
 from .clip import Clip
-from .utils import async_generate, async_run
+from .utils import async_run
 import time
 
 class Clips():
@@ -26,7 +26,7 @@ class Clips():
                 raise ValueError("BroadcastType must be None, \"HOME\", or \"AWAY\"")
 
         # Generate clip objects for each play passed
-        self.clips = async_generate(Clip, [(play, self.broadcast_type) for play in self.plays])
+        self.clips = async_run(Clip, self.plays, self.broadcast_type)
 
     def get_plays(self) -> List[Play]:
         return self.plays
@@ -35,5 +35,5 @@ class Clips():
         return self.clips
 
     def download(self, path: str, verbose: bool=False):
-        args = [(clip, f"{path}{index:03d}.mp4", verbose) for index, clip in enumerate(self.clips)]
-        return async_run(Clip.download, args)
+        paths = [f"{path}{index:03d}.mp4" for index in range(len(self.clips))]
+        return async_run(Clip.download, self.clips, paths, verbose)
