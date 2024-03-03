@@ -160,5 +160,5 @@ class Game():
         return async_run(Play, self, rows)
 
     def __str__(self) -> str:
-        return f"{self._away.get_abbr()} - {self._home.get_abbr()}, Final: {self._away_score}-{self._home_score}, Date: {self._date}, GamePK: {self._game_pk}"
+        return f"{self._away.abbreviation} - {self._home.abbreviation}, Final: {self._away_score}-{self._home_score}, Date: {self._date}, GamePK: {self._game_pk}"
 

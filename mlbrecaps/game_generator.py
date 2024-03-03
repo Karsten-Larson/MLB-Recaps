@@ -77,7 +77,7 @@ class GameGenerator():
     def __from_dates(self) -> Set[int]:
         start_dt, end_dt = self._date.get_dates()
 
-        games_url = [f"https://statsapi.mlb.com/api/v1/schedule?startDate={start_dt.to_formatted_string()}&endDate={end_dt.to_formatted_string()}&sportId=1&teamId={team.get_id()}" for team in self._teams]
+        games_url = [f"https://statsapi.mlb.com/api/v1/schedule?startDate={start_dt.to_formatted_string()}&endDate={end_dt.to_formatted_string()}&sportId=1&teamId={team.team_id}" for team in self._teams]
         date_jsons = [json.loads(requests.get(game_url).text) for game_url in games_url]
 
         # Put all game_pks into a set
