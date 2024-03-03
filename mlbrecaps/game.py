@@ -50,50 +50,62 @@ class Game():
 
         return "HOME"
 
-    def get_home(self) -> Team:
+    @property
+    def home(self) -> Team:
         return self._home
 
-    def get_away(self) -> Team:
+    @property
+    def away(self) -> Team:
         return self._away
 
-    def get_home_score(self) -> int:
+    @property
+    def home_score(self) -> int:
         return self._home_score
 
-    def get_away_score(self) -> int:
+    @property
+    def away_score(self) -> int:
         return self._away_score
 
-    def get_home_lineup(self) -> List[int]:
-        return self._home_lineup
+    @property
+    def home_lineup(self) -> List[int]:
+        return self._home_lineup.copy()
 
-    def get_away_lineup(self) -> List[int]:
-        return self._away_lineup
+    @property
+    def away_lineup(self) -> List[int]:
+        return self._away_lineup.copy()
 
     def get_lineup(self, team) -> List[int]:
         if team == self._away:
-            return self.get_away_lineup()
+            return self.away_lineup()
             
-        return self.get_home_lineup()
+        return self.home_lineup
 
-    def get_game_pk(self) -> int:
+    @property
+    def game_pk(self) -> int:
         return self._game_pk
 
-    def get_date(self) -> Date:
-        return self._date
+    @property
+    def date(self) -> Date:
+        return self._date.copy()
 
     @dataframe_from_url
     def __get_data(self) -> pd.DataFrame:
         return f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={self._game_pk}"
 
-    def get_data(self) -> pd.DataFrame:
+    @property
+    def data(self) -> pd.DataFrame:
         return self.__get_data().copy()
 
-    def get_game_json(self):
+    @property
+    def game_json(self):
         return self._game_json.copy()
 
-    def get_away_json(self):
+    @property
+    def away_json(self):
         return self._away_json.copy()
 
-    def get_home_json(self):
+    @property
+    def home_json(self):
         return self._home_json.copy()
 
     def get_highlights(self, plays:int =10, team: Optional[str]=None):
@@ -131,13 +143,13 @@ class Game():
     def get_player_highlights(self, player: Player, plays: int):
         df = self.__get_data()
 
-        home_player = player.get_player_id() in self.get_home_lineup()
+        is_home_player = player.player_id in self.home_lineup
 
-        df = df[df.events.notnull() & ((df.batter == player.get_player_id()) | (df.pitcher == player.get_player_id()))]
-        df = df.sort_values(by="delta_home_win_exp", key=None, ascending=home_player)
+        df = df[df.events.notnull() & ((df.batter == player.player_id) | (df.pitcher == player.player_id))]
+        df = df.sort_values(by="delta_home_win_exp", key=None, ascending=is_home_player)
         df = df.sort_values(by="at_bat_number", ascending=True)
 
-        if home_player:
+        if is_home_player:
             df = df[df["delta_home_win_exp"] >= 0]
         else:
             df = df[df["delta_home_win_exp"] <= 0]

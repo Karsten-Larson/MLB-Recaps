@@ -3,7 +3,7 @@ from typing import Set, List
 from mlbrecaps import Team, Date, DateRange, GameGenerator, Player, Clip
 
 def last10Homeruns(team: Team, dates: Date | DateRange):
-    games: List[Game] = GameGenerator(team, date).get_games()
+    games: List[Game] = GameGenerator(team, date).games
 
     # Get the lineup of both games (in case of double header)
     lineup: Set[int] = set()
@@ -15,7 +15,7 @@ def last10Homeruns(team: Team, dates: Date | DateRange):
     
     for player_id in lineup:
         # Find player from the game
-        player: Player = Player(player_id, date.get_year())
+        player: Player = Player(player_id, date.year)
 
         # Check if the player is a batter
         if not player.is_batter():
@@ -26,24 +26,24 @@ def last10Homeruns(team: Team, dates: Date | DateRange):
             continue
 
         # Find his last 10 homeruns
-        print(f"{player.get_full_name()} had {player.get_homerun_count()} homeruns in {date.get_year()}!")
+        print(f"{player.get_full_name()} had {player.get_homerun_count()} homeruns in {date.year}!")
         homeruns = player.get_homeruns()[-10:] # get last 10 homeruns
 
         # If their last homerun wasn't on that date, continue
-        if homeruns[-1].getGame().get_date() != date:
+        if homeruns[-1].game.date != date:
             continue
 
         # Download all the homeruns
         for index, homerun in enumerate(homeruns):
             # Get whether twins were home or away in the given clip
-            homeRoad: str = homerun.getGame().getHomeRoad(team)
+            homeRoad: str = homerun.game.road_status(team)
 
             # Get the twins broadcast of the clip
             clip: Clip = Clip(homerun, homeRoad)
-            print(homerun.getGame().get_date())
+            print(homerun.game.date)
 
             # Download the clip
-            clip.download(f"./videos/{player.get_last_name()}{index:02d}.mp4", True)
+            clip.download(f"./videos/{player.last_name}{index:02d}.mp4", True)
 
     print(f"Successfully Completed")
 

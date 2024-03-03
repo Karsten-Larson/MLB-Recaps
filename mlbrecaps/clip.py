@@ -12,7 +12,7 @@ class Clip():
         if not isinstance(play, Play):
             raise ValueError("Play must be a Play object")
 
-        self.play: Play = play
+        self._play: Play = play
 
         match broadcast_type: # Enforce broad_type types
             case "HOME" | "AWAY" | None:
@@ -20,16 +20,18 @@ class Clip():
             case _:
                 raise ValueError("BroadcastType must be None, \"HOME\", or \"AWAY\"")
 
-        self.clip_url: str = self.__generate()
+        self._clip_url: str = self.__generate()
 
-    def get_clip_url(self) -> str:
-        return self.clip_url
+    @property
+    def clip_url(self) -> str:
+        return self._clip_url
 
     def __str__(self) -> str:
-        return self.get_clip_url()
+        return self.clip_url
 
-    def get_play(self) -> Play:
-        return self.play
+    @property
+    def play(self) -> Play:
+        return self._play
 
     # gets the url of the clip to be downloaded from the savant clip
     def __get_url(self, site_url: str) -> str:
@@ -54,19 +56,19 @@ class Clip():
     # row must be a pandas dataframe row
     def __generate(self) -> str:
         # load the given game's json file
-        game_json = self.play.getGame().get_game_json()
+        game_json = self._play.game.game_json
 
         # find the broadcast type so it's always corresponding
         # to the given batter's home team's broadcast
         if self.broadcast_type:
             broadcast_type = self.broadcast_type
-        elif self.play.getTopBot() == "TOP":
+        elif self._play.inning_topbot == "TOP":
             broadcast_type = "AWAY"
         else:
             broadcast_type = "HOME"
 
         # with the play id find the url for the savant clip
-        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={self.play.getPlayID()}&videoType={broadcast_type}"
+        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={self._play.play_id}&videoType={broadcast_type}"
         clip_url = self.__get_url(site_url)
 
         # if the clip is alright return it
@@ -75,22 +77,20 @@ class Clip():
         
         # if the clip is screwed up then it was a national tv game
         # return the correct national tv clip url
-        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={self.play.getPlayID()}&videoType=NETWORK"
+        site_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={self._play.play_id}&videoType=NETWORK"
         clip_url = self.__get_url(site_url)
 
         return clip_url
 
     def download(self, path: str, verbose: bool =False) -> None:
-        # subprocess.run(["ffmpeg", "-i", self.clip_url, "-t", "60", "-c", "copy", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
         # create response object 
         # if a time out happens, try five more times before crashing the entire program
         for z in range(5):
             try:
-                r = requests.get(self.clip_url, stream=True, timeout=60) 
+                r = requests.get(self._clip_url, stream=True, timeout=60) 
                 break
             except requests.exceptions.Timeout:
-                print(f'Timeout has been raised. Link: {self.clip_url}')
+                print(f'Timeout has been raised. Link: {self._clip_url}')
 
         # download the file to the specific location
         # honestly copied and pasted code, can't say much else

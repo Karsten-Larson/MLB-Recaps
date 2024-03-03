@@ -20,41 +20,48 @@ class Player():
         # Get player JSON information
         playerURL: str = f"https://statsapi.mlb.com/api/v1/people/{player_id}"
         playerContent = requests.get(playerURL)
-        self._player_json = json.loads(playerContent.text)["people"][0]
+        player_json = json.loads(playerContent.text)["people"][0]
 
         # Player's name
-        self._first_name: str = self._player_json["firstName"]
-        self._last_name: str = self._player_json["lastName"]
+        self._first_name: str = player_json["firstName"]
+        self._last_name: str = player_json["lastName"]
 
         # Player's position
-        self._primary_position: str = self._player_json["primaryPosition"]["name"]
-        self._primary_position_abbr: str = self._player_json["primaryPosition"]["abbreviation"]
+        self._primary_position: str = player_json["primaryPosition"]["name"]
+        self._primary_position_abbr: str = player_json["primaryPosition"]["abbreviation"]
 
     def is_pitcher(self) -> bool:
         return self._primary_position_abbr == "P"
-
+    
     def is_batter(self) -> bool:
         return not self.is_pitcher()
 
-    def get_position(self) -> str:
+    @property
+    def position(self) -> str:
         return self._primary_position
 
-    def get_position_abbr(self) -> str:
+    @property
+    def position_abbr(self) -> str:
         return self._primary_position_abbr
 
-    def get_player_id(self) -> int:
+    @property
+    def player_id(self) -> int:
         return self._player_id
 
-    def get_season(self) -> int:
+    @property
+    def season(self) -> int:
         return self._season
 
-    def get_first_name(self) -> str:
+    @property
+    def first_name(self) -> str:
         return self._first_name
 
-    def get_last_name(self) -> str:
+    @property
+    def last_name(self) -> str:
         return self._last_name
 
-    def get_full_name(self) -> str:
+    @property
+    def full_name(self) -> str:
         return f"{self._first_name} {self._last_name}"
 
     # Lazy generate and save each season on call

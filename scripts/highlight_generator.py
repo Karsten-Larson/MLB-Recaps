@@ -2,7 +2,7 @@ from mlbrecaps import Team, Date, DateRange, GameGenerator, Clips
 
 def highlightGenerator(team: Team, dates: Date | DateRange, path: str):
     # get all games on that date
-    games = GameGenerator(team, dates).get_games()
+    games = GameGenerator(team, dates).games
 
     # Iterate over every game found
     for index, game in enumerate(games):
@@ -21,6 +21,7 @@ if __name__ == "__main__":
     # Get teams for the search
     team = Team("MIN")
     # dates = Date(7, 20, 2023)
-    dates = Date(9, 17, 2023)
+    # dates = Date(9, 17, 2023)
+    dates = DateRange(Date(9, 17, 2023), Date(9, 20, 2023))
 
     highlightGenerator(team, dates, "/home/karsten/coding/python/recaps/videos/")

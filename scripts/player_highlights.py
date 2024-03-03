@@ -1,7 +1,7 @@
 from mlbrecaps import Player, GameGenerator, Team, Date, DateRange, Clips
 
 def player_highlights(team: Team, player: Player, dates: Date | DateRange, path: str, verbose: bool=False):
-    game = GameGenerator(team, dates).get_games()[0]
+    game = GameGenerator(team, dates).games[0]
 
     player_plays = game.get_player_highlights(player, 5)
 

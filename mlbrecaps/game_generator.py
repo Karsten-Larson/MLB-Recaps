@@ -2,6 +2,8 @@ import requests
 import json
 import pandas as pd
 
+# from multipledispatch import dispatch
+from functools import singledispatchmethod, cache
 from typing import List, Set, Tuple
 
 from .team import Team
@@ -13,63 +15,79 @@ from .utils import async_run
 class GameGenerator():
 
     def __init__(self, teams: Team | List[Team], date: Date | DateRange | str | Tuple[int, int, int]):
-        # Ensure teams is of correct type
-        match teams:
-            case list():
-                if len(teams) == 0 or not isinstance(teams[0], Team):
-                    raise ValueError("A list of Team objects must be passed")
+        self.__set_teams(teams)
+        self.__set_date(date)
 
-                self.teams: List[Team] = teams
-            case Team():
-                self.teams = [teams]
-            case _:
-                raise ValueError("A Team or list of Team objects must be passed")
+        self._ids: Set[int] = self.__from_dates()
 
-        # Ensure date is of correct type
-        match date:
-            case Date() | DateRange():
-                self.date: Date | DateRange = date
-            case tuple():
-                try:
-                    self.date = Date(*date)
-                except ValueError:
-                    raise ValueError("A Date or DateRange object must be passed")
-            case _:
-                try:
-                    self.date = Date(date)
-                except ValueError:
-                    raise ValueError("A Date or DateRange object must be passed")
+    @singledispatchmethod
+    def __set_teams(self, teams: Team | List[Team]) -> None:
+        raise ValueError("Teams must be a Team or list of Team object")
 
-        self._ids: Set[int] = set()
-        self.__from_dates()
-        self._games: List[Game] | None = None
+    @__set_teams.register(list)
+    def _(self, teams: List[Team]) -> None:
+        if len(teams) == 0 or not all(isinstance(team, Team) for team in teams):
+            raise ValueError("A list of Team objects must be passed")
 
-    def get_games(self) -> List[Game]:
-        if self._games:
-            return self._games.copy()
+        self._teams: List[Team] = teams
 
+    @__set_teams.register(Team)
+    def _(self, teams: Team) -> None:
+        self._teams = [teams]
+
+    @singledispatchmethod
+    def __set_date(self, date) -> None:
+        raise ValueError("Invalid date must be of type Date, DateRange, str, or Tuple[int, int, int]")
+
+    @__set_date.register(str)
+    def _(self, date: str) -> None:
+        try: 
+            d = Date(date)
+        except:
+            raise ValueError("A valid date string of format %m/%d/%Y must be passed")
+
+        self._date = DateRange(d, d)
+
+    @__set_date.register(tuple)
+    def _(self, date: Tuple[int, int, int]) -> None:
+        try: 
+            d = Date(*date)
+        except:
+            raise ValueError("A valid date tuple of format (month, day, year) must be passed")
+
+        self._date = DateRange(d, d)
+
+    @__set_date.register(Date)
+    def _(self, date: Date) -> None:
+        self._date: DateRange = DateRange(date, date)
+
+    @__set_date.register(DateRange)
+    def _(self, date: DateRange) -> None:
+        self._date = date
+
+    @property
+    @cache
+    def games(self) -> List[Game]:
         # Generate every Game object from ids
-        self._games = async_run(Game, list(self._ids))
-        return self._games.copy()
-        
-    def __from_dates(self) -> None:
-        if isinstance(self.date, DateRange):
-            start_dt, end_dt = self.date.get_dates()
-        else:
-            start_dt = end_dt = self.date
+        games: List[Game] = async_run(Game, list(self._ids))
+        games.sort(key=lambda game: game.date)
 
-        games_url = [f"https://statsapi.mlb.com/api/v1/schedule?startDate={start_dt.to_formatted_string()}&endDate={end_dt.to_formatted_string()}&sportId=1&teamId={team.get_id()}" for team in self.teams]
+        return games
+        
+    def __from_dates(self) -> Set[int]:
+        start_dt, end_dt = self._date.get_dates()
+
+        games_url = [f"https://statsapi.mlb.com/api/v1/schedule?startDate={start_dt.to_formatted_string()}&endDate={end_dt.to_formatted_string()}&sportId=1&teamId={team.get_id()}" for team in self._teams]
         date_jsons = [json.loads(requests.get(game_url).text) for game_url in games_url]
 
-        for date_json in date_jsons:
-            for date in date_json["dates"]:
-                for game in date["games"]:
-                    self._ids.add(game["gamePk"])
+        # Put all game_pks into a set
+        return {int(game["gamePk"]) for date_json in date_jsons for date in date_json["dates"] for game in date["games"]}
 
-    def get_ids(self) -> List[int]:
+    @property
+    def ids(self) -> List[int]:
         # Only finds the unique game_pks for a given team (needed in case of a double header)
         return list(self._ids)
 
-    def number_of_games(self) -> int:
+    def __len__(self) -> int:
         return len(self._ids)
 

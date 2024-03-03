@@ -45,7 +45,7 @@ class DateGenerator():
         end_dt.next(28)
 
         # check if it is still in the month then go one back
-        while end_dt.date.month == month:
+        while end_dt._date.month == month:
             end_dt.next()
 
         end_dt.prev()

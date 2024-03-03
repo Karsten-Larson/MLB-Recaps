@@ -9,50 +9,58 @@ if TYPE_CHECKING:
 class Play():
 
     def __init__(self, game: Game, row):
-        self.game: Game = game
-        self.at_bat: int = row.at_bat_number
-        self.play: pd.DataFrame = row
-        self.pitch_number: int = row.pitch_number
-        self.batter: str = row.player_name
-        self.event: str = row.description
-        self.description: str = row.des
-        self.inning_topbot: str = row.inning_topbot
+        self._game: Game = game
+        self._at_bat: int = row.at_bat_number
+        self._play: pd.DataFrame = row
+        self._pitch_number: int = row.pitch_number
+        self._batter: str = row.player_name
+        self._event: str = row.description
+        self._description: str = row.des
+        self._inning_topbot: str = row.inning_topbot
 
-        if self.inning_topbot == "Top":
-            team = self.game.get_home_json()
+        if self._inning_topbot == "Top":
+            team = self._game.home_json
         else:
-            team = self.game.get_away_json()
+            team = self._game.away_json
 
         # filter the json file to find the at bat, this will help find the play id
-        team = [x for x in team if x["ab_number"] == self.at_bat]
+        team = [x for x in team if x["ab_number"] == self._at_bat]
 
         # sorts the at bat by pitch number, highest number is the last pitch of the at bat
         team.sort(key=lambda item: item["pitch_number"], reverse=True)
-        self.playID: str = team[0]["play_id"]
+        self._play_id: str = team[0]["play_id"]
 
-    def getGame(self) -> Game:
-        return self.game
+    @property
+    def game(self) -> Game:
+        return self._game
 
-    def getAtBat(self) -> int:
-        return self.at_bat
+    @property
+    def at_bat(self) -> int:
+        return self._at_bat
 
-    def getPlayData(self) -> pd.DataFrame:
-        return self.play.copy()
+    @property
+    def play_data(self) -> pd.DataFrame:
+        return self._play.copy()
 
-    def getTopBot(self) -> str:
-        return self.inning_topbot
+    @property
+    def inning_topbot(self) -> str:
+        return self._inning_topbot
 
-    def getBatter(self) -> str:
-        return self.batter
+    @property
+    def batter(self) -> str:
+        return self._batter
 
-    def getEvent(self) -> str:
-        return self.event
+    @property
+    def event(self) -> str:
+        return self._event
 
-    def getDescription(self) -> str:
-        return self.description
+    @property
+    def description(self) -> str:
+        return self._description
 
-    def getPlayID(self) -> str:
-        return self.playID
+    @property
+    def play_id(self) -> str:
+        return self._play_id
 
     def __str__(self):
-        return f"{self.__class__}@Game={self.game}:atBat={self.at_bat}:Batter={self.batter}:Description={self.description}:topBot={self.inning_topbot}"
+        return f"{self.__class__}@Game={self._game}:atBat={self._at_bat}:Batter={self._batter}:Description={self._description}:topBot={self._inning_topbot}"

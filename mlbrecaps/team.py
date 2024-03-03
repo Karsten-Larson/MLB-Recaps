@@ -17,16 +17,19 @@ class Team():
 
         row: pd.DataFrame = Team._team_lookup.loc[Team._team_lookup["Abbreviation"] == self._abbr]
         self._team: str = row["Full Name"].values[0]
-        self._teamID: int = row["Team ID"].values[0]
+        self._team_id: int = row["Team ID"].values[0]
 
-    def get_name(self) -> str:
+    @property
+    def name(self) -> str:
         return self._team
 
-    def get_abbr(self) -> str:
+    @property
+    def abbreviation(self) -> str:
         return self._abbr
 
-    def get_id(self) -> int:
-        return self._teamID
+    @property
+    def team_id(self) -> int:
+        return self._team_id
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Team):
@@ -35,4 +38,4 @@ class Team():
         return self._abbr == other._abbr
 
     def __str__(self) -> str:
-        return f"{self.__class__}@Name={self._team}:Abbreviation={self._abbr}:ID={self._teamID}"
+        return f"{self.__class__}@Name={self._team}:Abbreviation={self._abbr}:ID={self._team_id}"

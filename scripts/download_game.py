@@ -5,7 +5,7 @@ if __name__ == "__main__":
     team = Team("MIN")
     date = Date(9, 30, 2023)
 
-    games = GameGenerator(team, date).get_games()
+    games = GameGenerator(team, date).games
     game = games[0]
 
     plays = game.get_highlights(10, game.getHomeRoad(team))

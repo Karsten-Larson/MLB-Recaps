@@ -4,9 +4,9 @@ if __name__ == "__main__":
     team = Team("MIN")
     date = Date(4, 18, 2023)
 
-    game = GameGenerator(team, date).get_games()[0]
+    game = GameGenerator(team, date).games[0]
     print(game)
-    print(game.get_game_pk())
+    print(game.game_pk)
     exit()
     player = Player(543877)
 

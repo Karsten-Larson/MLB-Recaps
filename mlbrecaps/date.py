@@ -1,59 +1,78 @@
 from __future__ import annotations
 
-from functools import total_ordering
+from functools import total_ordering, singledispatchmethod
 from datetime import datetime, timedelta
 
 from typing import Optional
 
 @total_ordering
 class Date():
+	
 	def __init__(self, date: datetime | str | int, day: Optional[int]=None, year: Optional[int]=None):
-		self.set_date(date, day, year)
+		if day and year:
+			self.__set_date(date, day, year)
+		else:
+			self.__set_date(date)
 
-	def set_date(self, date: datetime | str | int, day: Optional[int]=None, year: Optional[int]=None) -> None:
-		match date:
-			case str():
-				self.date = datetime.strptime(date, "%m/%d/%Y")
-			case int():
-				self.date: datetime = datetime(year, date, day)
-			case datetime():
-				self.date: datetime = date
-			case _:
-				raise ValueError("Invalid Date")
+	@singledispatchmethod
+	def __set_date(self, date: datetime | str | int, day: Optional[int]=None, year: Optional[int]=None):
+		raise ValueError("Invalid Date")
 
-	def get_date(self) -> datetime:
-		return self.date
+	@__set_date.register(datetime)
+	def _(self, date: datetime):
+		self._date = date
+
+	@__set_date.register(str)
+	def _(self, date: str):
+		self._date = datetime.strptime(date, "%m/%d/%Y")
+
+	@__set_date.register(int)
+	def _(self, date: int, day: int, year: int):
+		self._date: datetime = datetime(year, date, day)
+
+	@property
+	def date(self) -> datetime:
+		return self._date
 
 	def to_formatted_string(self) -> str:
-		return self.date.strftime("%Y-%m-%d")
+		return self._date.strftime("%Y-%m-%d")
 
-	def get_year(self) -> int:
-		return self.date.year
+	@property
+	def year(self) -> int:
+		return self._date.year
+
+	@property
+	def month(self) -> int:
+		return self._date.month
+
+	@property
+	def day(self) -> int:
+		return self._date.day
 
 	def next(self, increment: float=1) -> None:
-		self.date += timedelta(days=increment)
+		self._date += timedelta(days=increment)
 
 	def prev(self, increment: float=1) -> None:
-		self.date -= timedelta(days=increment)
+		self._date -= timedelta(days=increment)
 
-	def __copy__(self) -> Date:
-		month = self.date.month
-		day = self.date.day
-		year = self.date.year
+	def copy(self) -> Date:
+		month = self._date.month
+		day = self._date.day
+		year = self._date.year
 
 		return type(self)(datetime(year, month, day))
 
-	def __eq__(self, o: object) -> bool:
-		if not isinstance(o, Date):
+	def __eq__(self, other: object) -> bool:
+		if not isinstance(other, Date):
 			return False
 
-		return self.date == other.get_date()
+		return self._date == other.date
 
-	def __lt__(self, o: object) -> bool:
-		if not isinstance(o, Date):
+	def __lt__(self, other: object) -> bool:
+		if not isinstance(other, Date):
 			return False
 
-		return self.date < other.get_date()
+		return self._date < other.date
 
 	def __str__(self) -> str:
-		return self.date.strftime("%Y-%m-%d")
+		return self._date.strftime("%Y-%m-%d")
