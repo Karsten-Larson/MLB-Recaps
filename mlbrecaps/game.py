@@ -3,7 +3,7 @@ import io
 import requests
 import json
 
-from functools import lru_cache
+from functools import lru_cache, singledispatchmethod
 from typing import List, Optional
 
 from .team import Team
@@ -44,7 +44,12 @@ class Game():
         self._home_score: int = self._game_json["scoreboard"]["linescore"]["teams"]["home"]["runs"]
         self._away_score: int = self._game_json["scoreboard"]["linescore"]["teams"]["away"]["runs"]
     
+    @singledispatchmethod
     def road_status(self, team: Team) -> str:
+        raise ValueError("team must be of type Team")
+
+    @road_status.register(Team)
+    def _(self, team: Team) -> str:
         if self._away == team:
             return "AWAY"
 

@@ -8,5 +8,6 @@ from .game_generator import GameGenerator
 from .play import Play
 from .player import Player
 from .team import Team
+from .scripts import highlight_generator
 
-__all__ = ["Clip", "Clips", "Date", "DateRange", "DateGenerator", "Game", "Play", "Player", "GameGenerator", "Team"]
+__all__ = ["Clip", "Clips", "Date", "DateRange", "DateGenerator", "Game", "Play", "Player", "GameGenerator", "Team", "scripts"]

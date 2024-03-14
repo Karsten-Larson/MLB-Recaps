@@ -1,11 +1,10 @@
-from typing import List, Literal, TYPE_CHECKING
+from typing import List, Literal
 from functools import singledispatchmethod
 
 from .play import Play
 from .game import Game
 from .clip import Clip
 from .utils import async_run
-import time
 
 class Clips():
     def __init__(self, plays: List[Play] | Play, broadcast_type: Literal["HOME", "AWAY"] | None=None):
@@ -47,6 +46,6 @@ class Clips():
     def broadcast_type(self) -> str:
         return self._broadcast_type
 
-    def download(self, path: str, verbose: bool=False):
+    def download(self, path: str, verbose: bool=False) -> None:
         paths = [f"{path}{index:03d}.mp4" for index in range(len(self._clips))]
-        return async_run(Clip.download, self._clips, paths, verbose)
+        async_run(Clip.download, self._clips, paths, verbose)
