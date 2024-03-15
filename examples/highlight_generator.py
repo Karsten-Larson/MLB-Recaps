@@ -1,5 +1,4 @@
-# from mlbrecaps import Team, Date, DateRange, GameGenerator, Clips
-from ..team import Team
+from mlbrecaps import Team, Date, DateRange, GameGenerator, Clips
 
 def highlightGenerator(team: Team, dates: Date | DateRange, path: str, verbose: bool=True):
     # Type checking
