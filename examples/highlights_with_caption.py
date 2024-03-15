@@ -23,8 +23,7 @@ for index, game in enumerate(games):
    homeClips = Clips(homeHighlights, homeRoad) # Generate clips of the plays from the home broadcast
 
    # Download all highlight clips
-   if verbose:
-       print(f"Game {index + 1}: {game}")
+   print(f"Game {index + 1}: {game}")
 
    with open(f"{path}{index}.txt", "w") as f:
        f.write(str(game)) # caption of videos
