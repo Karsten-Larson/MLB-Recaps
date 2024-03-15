@@ -1,4 +1,4 @@
-from .scripts import highlight_generator
+from .scripts import get_highlights
 
 from .date import Date
 from .team import Team
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     if not file_path.endswith("/"):
         file_path += "/"
 
-    game_clips = highlight_generator(team, date)
+    game_clips = get_highlights(team, date)
 
     for index, clips in enumerate(game_clips):
         # Download all highlight clips

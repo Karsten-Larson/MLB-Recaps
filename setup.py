@@ -19,7 +19,11 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent",
     ],
-    install_requires=["pandas", "numpy", "requests", "bs4", "lxml"],
+    install_requires=['numpy>=1.13.0',
+                      'pandas >= 1.0.3',
+                      'beautifulsoup4>=4.4.0',
+                      'requests>=2.18.1',
+                      'lxml>=4.2.1',],
     extras_require={
         "dev": ["twine"]
     },
