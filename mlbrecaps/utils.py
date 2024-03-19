@@ -1,7 +1,7 @@
 import asyncio
 import requests
 import io
-import pandas as pd
+import polars as pl
 
 import itertools
 import functools
@@ -54,6 +54,6 @@ def dataframe_from_url(func, use_cache: bool=True):
         url: str = func(*args, **kwargs)
         csv: bytes = requests.get(url).content
 
-        return pd.read_csv(io.StringIO(csv.decode('utf-8')))
+        return pl.read_csv(io.StringIO(csv.decode('utf-8')))
 
     return wrapper

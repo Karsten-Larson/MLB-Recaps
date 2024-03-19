@@ -1,4 +1,4 @@
-import pandas as pd
+import polars as pl
 import io
 import requests
 import json
@@ -20,7 +20,6 @@ class Game():
 
     def __init__(self, game_pk: int):
         self._game_pk: int  = game_pk
-        self._game_data: pd.DataFrame | None = None
 
         # finds the url of the game based on the game_pk information stored in the at-bat data
         game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self._game_pk}"
@@ -94,11 +93,11 @@ class Game():
         return self._date.copy()
 
     @dataframe_from_url
-    def __get_data(self) -> pd.DataFrame:
+    def __get_data(self) -> pl.DataFrame:
         return f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&type=details&game_pk={self._game_pk}"
 
     @property
-    def data(self) -> pd.DataFrame:
+    def data(self) -> pl.DataFrame:
         return self.__get_data().copy()
 
     @property
@@ -123,20 +122,25 @@ class Game():
             raise ValueError("Team must be None, \"HOME\", or \"AWAY\"")
 
         # extra logic for when a home or away team is specified
-        key = None if team else abs
-        ascending = False if not team else (True, False)[team.lower() == "home"]
+        both_teams = True if team else False
+        descending = False if not team else (True, False)[team.lower() == "home"]
 
         # removes all non-events (balls, strikes, etc.)
         # then sorts for highest win expectancy for either team
         # then only keeps the top plays
         # also make sure the plays are in chronological order of the game
-        df = df[df.events.notnull()]
-        df = df.sort_values(by="delta_home_win_exp", key=key, ascending=ascending)
-        df = df.head(plays)
-        df = df.sort_values(by="pitch_number", ascending=True)
-        df = df.sort_values(by="at_bat_number", ascending=True)
+        df = df.filter(pl.col("events").is_not_null())
 
-        rows = [row for index, row in df.iterrows()]
+        if both_teams:
+            df = df.sort(pl.col("delta_home_win_exp").abs(), descending=True)
+        else:
+            df = df.sort("delta_home_win_exp", descending=descending)
+        
+        df = df.head(plays)
+        df = df.sort("pitch_number", descending=False)
+        df = df.sort("at_bat_number", descending=False)
+
+        rows = [row for row in df.iter_rows(named=True)]
         return async_run(Play, self, rows)
 
     def get_home_highlights(self, plays=10):

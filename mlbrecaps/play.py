@@ -10,13 +10,13 @@ class Play():
 
     def __init__(self, game: Game, row):
         self._game: Game = game
-        self._at_bat: int = row.at_bat_number
+        self._at_bat: int = row["at_bat_number"]
         self._play: pd.DataFrame = row
-        self._pitch_number: int = row.pitch_number
-        self._batter: str = row.player_name
-        self._event: str = row.description
-        self._description: str = row.des
-        self._inning_topbot: str = row.inning_topbot
+        self._pitch_number: int = row["pitch_number"]
+        self._batter: str = row["player_name"]
+        self._event: str = row["description"]
+        self._description: str = row["des"]
+        self._inning_topbot: str = row["inning_topbot"]
 
         if self._inning_topbot == "Top":
             team = self._game.home_json
