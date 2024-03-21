@@ -46,6 +46,6 @@ class Clips():
     def broadcast_type(self) -> str:
         return self._broadcast_type
 
-    def download(self, path: str, verbose: bool=False) -> None:
+    def download(self, path: str, verbose: bool=False) -> List[str]:
         paths = [f"{path}{index:03d}.mp4" for index in range(len(self._clips))]
-        async_run(Clip.download, self._clips, paths, verbose)
+        return async_run(Clip.download, self._clips, paths, verbose)

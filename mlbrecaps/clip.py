@@ -82,7 +82,7 @@ class Clip():
 
         return clip_url
 
-    def download(self, path: str, verbose: bool =False) -> None:
+    def download(self, path: str, verbose: bool =False) -> str:
         # create response object 
         # if a time out happens, try five more times before crashing the entire program
         for z in range(5):
@@ -101,3 +101,5 @@ class Clip():
 
         if verbose:
             print(f"Successfully downloaded: {path}")
+
+        return path
