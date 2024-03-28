@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="mlbrecaps",
-    version="0.0.1",
+    version="0.0.7",
     description="Package that gathers information on given MLB games",
     packages=find_packages(include=["mlbrecaps"]),
     long_description=long_description,

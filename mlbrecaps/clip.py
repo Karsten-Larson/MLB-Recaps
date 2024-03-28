@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 
 import requests
-import json
-import subprocess
+from pathlib import Path
 
 from .play import Play
 
@@ -82,15 +81,14 @@ class Clip():
 
         return clip_url
 
-    def download(self, path: str, verbose: bool =False) -> str:
+    def download(self, path: str | Path, verbose: bool =False) -> str:
+        path = path if isinstance(path, Path) else Path(path) 
+
         # create response object 
-        # if a time out happens, try five more times before crashing the entire program
-        for z in range(5):
-            try:
-                r = requests.get(self._clip_url, stream=True, timeout=60) 
-                break
-            except requests.exceptions.Timeout:
-                print(f'Timeout has been raised. Link: {self._clip_url}')
+        try:
+            r = requests.get(self._clip_url, stream=True, timeout=60) 
+        except requests.exceptions.Timeout:
+            print(f'Timeout has been raised. Link: {self._clip_url}')
 
         # download the file to the specific location
         # honestly copied and pasted code, can't say much else

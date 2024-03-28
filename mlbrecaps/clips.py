@@ -1,5 +1,6 @@
 from typing import List, Literal
 from functools import singledispatchmethod
+from pathlib import Path
 
 from .play import Play
 from .game import Game
@@ -46,6 +47,12 @@ class Clips():
     def broadcast_type(self) -> str:
         return self._broadcast_type
 
-    def download(self, path: str, verbose: bool=False) -> List[str]:
-        paths = [f"{path}{index:03d}.mp4" for index in range(len(self._clips))]
+    def download(self, path: str | Path, verbose: bool=False) -> List[str]:
+        path: Path = path if isinstance(path, Path) else Path(path)
+        paths: List[Path] = [path / f"{index:03d}.mp4" for index in range(len(self._clips))]
+
+        # Create all paths in memory if they don't exist
+        for p in paths: 
+            p.touch()
+
         return async_run(Clip.download, self._clips, paths, verbose)
