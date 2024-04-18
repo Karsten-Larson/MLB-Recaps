@@ -1,15 +1,19 @@
 import pandas as pd
-import os
+from pathlib import Path
 
 from functools import cache
 from typing import List, Dict
 
-class Team():
-    _team_lookup: pd.DataFrame = pd.read_csv(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/team-info.csv'))
 
-    # Speeds up and saves memory by caching the same type of objects
+class Team():
+    """Team data class"""
+    _team_lookup: pd.DataFrame = pd.read_csv(
+        Path(__file__).parent / "data" / "team-info.csv"
+    )
+
     @cache
     def __new__(cls, abbr: str):
+        """Speeds up and saves memory by caching objects of the same team"""
         return super().__new__(cls)
 
     def __init__(self, abbr: str):

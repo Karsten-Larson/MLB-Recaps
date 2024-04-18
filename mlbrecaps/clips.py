@@ -7,15 +7,19 @@ from .game import Game
 from .clip import Clip
 from .utils import async_run
 
+
 class Clips():
-    def __init__(self, plays: List[Play] | Play, broadcast_type: Literal["HOME", "AWAY"] | None=None):
+    """Container class for working with and generating multiple clips from a list of plays"""
+
+    def __init__(self, plays: List[Play] | Play, broadcast_type: Literal["HOME", "AWAY"] | None = None):
         self.__set_plays(plays)
 
-        match broadcast_type: # Enforce broad_type types
+        match broadcast_type:  # Enforce broad_type types
             case "HOME" | "AWAY" | None:
                 self._broadcast_type: str | None = broadcast_type
             case _:
-                raise ValueError("BroadcastType must be None, \"HOME\", or \"AWAY\"")
+                raise ValueError(
+                    "BroadcastType must be None, \"HOME\", or \"AWAY\"")
 
         # Generate clip objects for each play passed
         self._clips = async_run(Clip, self._plays, self._broadcast_type)
@@ -23,7 +27,7 @@ class Clips():
     @singledispatchmethod
     def __set_plays(self, plays) -> None:
         raise ValueError("A Play or list of Play objects must be passed")
-    
+
     @__set_plays.register(list)
     def _(self, plays: List[Play]) -> None:
         if len(plays) == 0 or not isinstance(plays[0], Play):
@@ -47,12 +51,20 @@ class Clips():
     def broadcast_type(self) -> str:
         return self._broadcast_type
 
-    def download(self, path: str | Path, verbose: bool=False) -> List[str]:
-        path: Path = path if isinstance(path, Path) else Path(path)
-        paths: List[Path] = [path / f"{index:03d}.mp4" for index in range(len(self._clips))]
+    def download(self, dir_path: str | Path, verbose: bool = False) -> List[Path]:
+        """Download all clips into a single directory"""
+        # Convert path string to Path object
+        dir_path: Path = dir_path if isinstance(
+            dir_path, Path) else Path(dir_path)
+        dir_path.mkdir(exist_ok=True, parents=True)
+
+        # Get all paths for the mp4s
+        paths: List[Path] = [
+            dir_path / f"{index:04d}.mp4" for index in range(len(self._clips))]
 
         # Create all paths in memory if they don't exist
-        for p in paths: 
+        for p in paths:
             p.touch()
 
+        # Download all clips and return the download paths
         return async_run(Clip.download, self._clips, paths, verbose)

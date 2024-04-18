@@ -1,44 +1,48 @@
 from typing import Set, List
 
-from mlbrecaps import Team, Date, DateRange, GameGenerator, Player, Clip
+from mlbrecaps import Team, Date, Game, DateRange, GameGenerator, Player, Clip
 
-def last10Homeruns(team: Team, dates: Date | DateRange):
+
+def last10Homeruns(team: Team, dates: Date):
     games: List[Game] = GameGenerator(team, date).games
+    season: int = date.year
 
-    # Get the lineup of both games (in case of double header)
-    lineup: Set[int] = set()
+    # Get all the players with a homerun in all the games of the day
+    lineup: Set[Player] = set()
 
-    # Reduce games into one lineup
     for game in games:
-        for player_id in game.get_lineup(team): # Get lineup of the team only
-            lineup.add(player_id)
-    
-    for player_id in lineup:
-        # Find player from the game
-        player: Player = Player(player_id, date.year)
+        homers: Set[int] = set(game.homers)
+        for player in Player.generate_players(game.get_lineup(team)):
+            if player.player_id in homers:
+                lineup.add(player)
 
-        # Check if the player is a batter
-        if not player.is_batter():
-            continue
+    print(*[player.player_id for player in lineup], sep=", ")
 
-        # Check if the player has at least 10 homeruns 
-        if player.get_homerun_count() < 10: 
-            continue
-
+    for player in lineup:
         # Find his last 10 homeruns
-        print(f"{player.get_full_name()} had {player.get_homerun_count()} homeruns in {date.year}!")
-        homeruns = player.get_homeruns()[-10:] # get last 10 homeruns
+        print(
+            f"{player.full_name} had {player.get_homerun_count(season)} homeruns in {date.year}!"
+        )
 
-        # If their last homerun wasn't on that date, continue
-        if homeruns[-1].game.date != date:
+        # Get all homeruns
+        homeruns = player.get_homeruns(season)
+        last_ten_index = 0
+
+        for index in range(round(player.get_homerun_count(season), -1) - 1, 0, -10):
+            # If their last homerun wasn't on that date, continue
+            if homeruns[index].game.date != date:
+                last_ten_index = index
+                break
+
+        if last_ten_index == 0:
             continue
 
         # Download all the homeruns
-        for index, homerun in enumerate(homeruns):
-            # Get whether twins were home or away in the given clip
+        for index, homerun in enumerate(homeruns[last_ten_index-9:last_ten_index]):
+            # Get whether team were home or away in the given clip
             homeRoad: str = homerun.game.road_status(team)
 
-            # Get the twins broadcast of the clip
+            # Get the home broadcast of the clip
             clip: Clip = Clip(homerun, homeRoad)
             print(homerun.game.date)
 
@@ -52,5 +56,5 @@ if __name__ == "__main__":
     team = Team("ATL")
     date = Date(10, 1, 2023)
     # date = Date(10, 11, 2023)
-    
+
     last10Homeruns(team, date)

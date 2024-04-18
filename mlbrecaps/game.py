@@ -1,16 +1,16 @@
 import pandas as pd
-import io
 import requests
 import json
 
 from functools import lru_cache, singledispatchmethod
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from .team import Team
 from .date import Date
 from .player import Player
 from .play import Play
 from .utils import async_run, dataframe_from_url
+
 
 class Game():
 
@@ -19,8 +19,7 @@ class Game():
         return super().__new__(cls)
 
     def __init__(self, game_pk: int):
-        self._game_pk: int  = game_pk
-        self._game_data: pd.DataFrame | None = None
+        self._game_pk: int = game_pk
 
         # finds the url of the game based on the game_pk information stored in the at-bat data
         game_url = f"https://baseballsavant.mlb.com/gf?game_pk={self._game_pk}"
@@ -32,18 +31,20 @@ class Game():
         self._home_json = self._game_json["team_home"]
 
         # Get home/away and date
-        self._home: Team = Team(self._game_json["home_team_data"]["abbreviation"])
-        self._away: Team = Team(self._game_json["away_team_data"]["abbreviation"])
+        self._home: Team = Team(
+            self._game_json["home_team_data"]["abbreviation"])
+        self._away: Team = Team(
+            self._game_json["away_team_data"]["abbreviation"])
         self._date: Date = Date(self._game_json["gameDate"])
 
         # Get both lineups
-        self._home_lineup: List[int] = self._game_json["home_lineup"]
-        self._away_lineup: List[int] = self._game_json["away_lineup"]
+        self._home_lineup_ids: List[int] = self._game_json["home_lineup"]
+        self._away_lineup_ids: List[int] = self._game_json["away_lineup"]
 
         # Get the final scores
         self._home_score: int = self._game_json["scoreboard"]["linescore"]["teams"]["home"]["runs"]
         self._away_score: int = self._game_json["scoreboard"]["linescore"]["teams"]["away"]["runs"]
-    
+
     @singledispatchmethod
     def road_status(self, team: Team) -> str:
         raise ValueError("team must be of type Team")
@@ -73,16 +74,16 @@ class Game():
 
     @property
     def home_lineup(self) -> List[int]:
-        return self._home_lineup.copy()
+        return self._home_lineup_ids.copy()
 
     @property
     def away_lineup(self) -> List[int]:
-        return self._away_lineup.copy()
+        return self._away_lineup_ids.copy()
 
     def get_lineup(self, team) -> List[int]:
         if team == self._away:
-            return self.away_lineup()
-            
+            return self.away_lineup
+
         return self.home_lineup
 
     @property
@@ -113,8 +114,9 @@ class Game():
     def home_json(self):
         return self._home_json.copy()
 
-    def get_highlights(self, plays:int =10, team: Optional[str]=None):
-        df = self.__get_data()
+    def get_highlights(self, plays: int = 10, team: Optional[str] = None) -> List[Play]:
+        """Gets the highlights of both, away, or home teams"""
+        df: pd.DataFrame = self.__get_data()
 
         if plays <= 0:
             raise ValueError("Plays must be greater than 0")
@@ -124,14 +126,16 @@ class Game():
 
         # extra logic for when a home or away team is specified
         key = None if team else abs
-        ascending = False if not team else (True, False)[team.lower() == "home"]
+        ascending = False if not team else (
+            True, False)[team.lower() == "home"]
 
         # removes all non-events (balls, strikes, etc.)
         # then sorts for highest win expectancy for either team
         # then only keeps the top plays
         # also make sure the plays are in chronological order of the game
         df = df[df.events.notnull()]
-        df = df.sort_values(by="delta_home_win_exp", key=key, ascending=ascending)
+        df = df.sort_values(by="delta_home_win_exp",
+                            key=key, ascending=ascending)
         df = df.head(plays)
         df = df.sort_values(by="pitch_number", ascending=True)
         df = df.sort_values(by="at_bat_number", ascending=True)
@@ -150,8 +154,10 @@ class Game():
 
         is_home_player = player.player_id in self.home_lineup
 
-        df = df[df.events.notnull() & ((df.batter == player.player_id) | (df.pitcher == player.player_id))]
-        df = df.sort_values(by="delta_home_win_exp", key=None, ascending=is_home_player)
+        df = df[df.events.notnull() & ((df.batter == player.player_id)
+                                       | (df.pitcher == player.player_id))]
+        df = df.sort_values(by="delta_home_win_exp",
+                            key=None, ascending=is_home_player)
         df = df.sort_values(by="at_bat_number", ascending=True)
 
         if is_home_player:
@@ -164,6 +170,12 @@ class Game():
         rows = [row for index, row in df.iterrows()]
         return async_run(Play, self, rows)
 
+    @property
+    def homers(self) -> Dict[int, int]:
+        df: pd.DataFrame = self.__get_data()
+        df = df[df.events == "home_run"]
+
+        return df["batter"].value_counts().to_dict()
+
     def __str__(self) -> str:
         return f"{self._away.abbreviation} - {self._home.abbreviation}, Final: {self._away_score}-{self._home_score}, Date: {self._date}, GamePK: {self._game_pk}"
-

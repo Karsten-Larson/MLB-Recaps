@@ -1,15 +1,19 @@
+from pathlib import Path
 from mlbrecaps import Team, Date, DateRange, GameGenerator, Clips
 
-def highlightGenerator(team: Team, dates: Date | DateRange, path: str, verbose: bool=True):
+
+def highlightGenerator(team: Team, dates: Date | DateRange, path: Path, verbose: bool = True):
     # Type checking
     if not isinstance(team, Team):
         raise ValueError("team must be of type Team")
-    
+
     if not (isinstance(dates, Date) or isinstance(dates, DateRange)):
         raise ValueError("dates must be of type Date or DateRange")
 
-    if not isinstance(path, str):
-        raise ValueError("path must be of type string")
+    if isinstance(path, str):
+        path = Path(path)
+    elif not isinstance(path, Path):
+        raise ValueError("path must be of type string or path")
 
     if not isinstance(verbose, bool):
         raise ValueError("verbose must be a boolean value")
@@ -23,14 +27,15 @@ def highlightGenerator(team: Team, dates: Date | DateRange, path: str, verbose: 
         homeRoad = game.road_status(team)
 
         # Get the top ten plays of the game
-        homeHighlights = game.get_highlights(10, homeRoad) 
-        homeClips = Clips(homeHighlights, homeRoad) # Generate clips of the plays from the home broadcast
+        homeHighlights = game.get_highlights(10, homeRoad)
+        # Generate clips of the plays from the home broadcast
+        homeClips = Clips(homeHighlights, homeRoad)
 
         # Download all highlight clips
         if verbose:
             print(f"Game {index + 1}: {game}")
 
-        homeClips.download(f"{path}{index}", verbose=verbose)
+        homeClips.download(path / f"{index}", verbose=verbose)
 
 
 if __name__ == "__main__":
@@ -39,5 +44,7 @@ if __name__ == "__main__":
 
     # Range of dates from September 17, 2023 to September 20, 2023
     dates = DateRange(Date(9, 17, 2023), Date(9, 20, 2023))
+    download_dir = Path(__file__).parent.parent / "videos"
 
-    highlightGenerator(team, dates, "/home/karsten/coding/python/recaps/videos/")
+    highlightGenerator(
+        team, dates, download_dir)

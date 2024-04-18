@@ -4,7 +4,9 @@ from copy import copy
 from .date import Date
 from .date_range import DateRange
 
+
 class DateGenerator():
+    """Static library for generating date objects"""
 
     @classmethod
     def today(cls) -> Date:

@@ -1,18 +1,23 @@
 from __future__ import annotations
 
 import pandas as pd
-import io
 import requests
 import json
+from functools import lru_cache
 
-from typing import List, Dict, Optional, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 if TYPE_CHECKING:
     from .game import Play
 
-from .date_generator import DateGenerator
+from .date import Date
 from .utils import async_run, dataframe_copy, dataframe_from_url
 
+
 class Player():
+
+    @lru_cache(maxsize=100)
+    def __new__(cls, player_id: int):
+        return super().__new__(cls)
 
     def __init__(self, player_id: int):
         self._player_id: int = player_id
@@ -32,7 +37,7 @@ class Player():
 
     def is_pitcher(self) -> bool:
         return self._primary_position_abbr == "P"
-    
+
     def is_batter(self) -> bool:
         return not self.is_pitcher()
 
@@ -75,33 +80,35 @@ class Player():
     # Encapsulates mutable data by making a copy
     @dataframe_copy
     def get_homerun_data(self, season: int) -> pd.DataFrame:
-        return self.__get_homerun_data(season)
+        df: pd.DataFrame = self.__get_homerun_data(season)
+        df = df.sort_values("game_date")
+        return df
 
     def get_homerun_count(self, season: int) -> int:
         return len(self.__get_homerun_data(season).index)
 
-    def get_homeruns(self, season: int | Date) -> List[Play]:
+    def get_homeruns(self, season: int) -> List[Play]:
         from .game import Play, Game
 
         homerun_data = self.__get_homerun_data(season)
-        # homerun_data.to_csv("./homeruns.csv")
-
-        # if date:
-            # homerun_data = homerun_data[homerun_data[]]
 
         games: List[Game] = async_run(Game, list(homerun_data["game_pk"]))
         rows = [row for index, row in homerun_data.iterrows()]
 
         return async_run(Play, games, rows)[::-1]
 
+    @classmethod
+    def generate_players(cls, player_ids: List[int]) -> List[Player]:
+        return async_run(cls, player_ids)
+
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, Player):
             return False
 
-        return self._player_id == other._player_id
+        return self._player_id == o._player_id
 
     def __hash__(self) -> int:
-        return self._player_id
+        return hash(self._player_id)
 
     def __str__(self) -> str:
         return f"{self.__class__}@PlayerID={self._player_id}:FirstName={self._first_name}:LastName={self._last_name}"
