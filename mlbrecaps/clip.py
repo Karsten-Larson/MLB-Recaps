@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 
 import requests
+import cloudscraper
 from pathlib import Path
 
 from .play import Play
@@ -23,6 +24,7 @@ class Clip():
                     "BroadcastType must be None, \"HOME\", or \"AWAY\"")
 
         self._clip_url: str = self.__generate()
+        print(self._clip_url)
 
     @property
     def clip_url(self) -> str:
@@ -91,17 +93,14 @@ class Clip():
 
         # create response object
         try:
-            r = requests.get(self._clip_url, stream=True, timeout=60)
+            r = cloudscraper.create_scraper().get(self._clip_url, stream=True, timeout=60)
         except requests.exceptions.Timeout:
             print(f'Timeout has been raised. Link: {self._clip_url}')
 
-        # download the file to the specific location
-        # honestly copied and pasted code, can't say much else
-        with open(path, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=1024*1024):
-                if chunk:
-                    f.write(chunk)
+        # Download video
+        open(path, "wb").write(r.content)
 
+        # State the video was successfully downloaded (not always the case lol)
         if verbose:
             print(f"Successfully downloaded: {path.absolute()}")
 
