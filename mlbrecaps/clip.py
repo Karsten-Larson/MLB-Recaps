@@ -24,7 +24,6 @@ class Clip():
                     "BroadcastType must be None, \"HOME\", or \"AWAY\"")
 
         self._clip_url: str = self.__generate()
-        print(self._clip_url)
 
     @property
     def clip_url(self) -> str:

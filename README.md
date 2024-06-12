@@ -24,6 +24,10 @@ highlights = scripts.get_highlights(Team("MIN"), Date(10, 3, 2023))
 highlights.download("/path/to/folder/", verbose=True)
 ```
 
+### Example in Google Colab
+
+[Link to Google Colab](https://colab.research.google.com/drive/1QdHi8rVwSTW14DeO-GAqwc5nU8v6EqH-?usp=sharing)
+
 ### Run directly from the terminal
 
 If you have the mlbrecaps package installed, you can use the following command to download highlights directly from the terminal:
